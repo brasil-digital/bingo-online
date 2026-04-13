@@ -1209,30 +1209,49 @@ async function carregarPontos() {
 
 // ─── CARREGAR CARTELAS ────────────────────────────────
 async function carregarCartelas() {
+  // Carrega TODAS as cartelas pagas para rastrear hits
   const { data } = await sb
     .from('cartelas')
     .select('id, codigo, numeros, ponto_id, pontos(nome)')
     .eq('sorteio_id', SORTEIO_ID)
     .eq('status', 'paga')
-    .limit(5)
 
-  if (!data) return
-  cartelasDB = data
+  if (!data || data.length === 0) return
+  // Normaliza numeros para garantir que são inteiros
+  cartelasDB = data.map(c => ({
+    ...c,
+    numeros: (c.numeros || []).map(Number)
+  }))
+
+  renderizarTopCartelas()
+}
+
+function renderizarTopCartelas() {
+  // Calcula acertos de cada cartela com base nas bolas sorteadas até agora
+  const com_acertos = cartelasDB.map(c => ({
+    ...c,
+    acertos: c.numeros.filter(n => sorteadas.includes(n)).length
+  }))
+
+  // Ordena por acertos desc, pega top 5
+  const top5 = com_acertos.sort((a, b) => b.acertos - a.acertos).slice(0, 5)
 
   const list = document.getElementById('cartelasList')
   list.innerHTML = ''
-  data.forEach(c => {
+  top5.forEach(c => {
     const pontoNome = c.pontos?.nome || '—'
     const card = document.createElement('div')
-    card.className = 'cartela-card'
+    card.className = 'cartela-card' + (c.acertos >= 4 ? ' destaque' : '')
     card.id = `cartela-${c.id}`
-    const numsHtml = c.numeros.map(n =>
-      `<div class="cartela-num" id="cn-${c.id}-${n}">${n}</div>`
-    ).join('')
+    const numsHtml = c.numeros.map(n => {
+      const hit = sorteadas.includes(n)
+      return `<div class="cartela-num${hit ? ' hit' : ''}" id="cn-${c.id}-${n}">${n}</div>`
+    }).join('')
     card.innerHTML = `
       <div class="cartela-header">
         <span class="cartela-id">#${c.codigo}</span>
         <span class="cartela-ponto">${pontoNome}</span>
+        <span style="margin-left:auto;font-size:10px;color:#00e87a;font-weight:700;">${c.acertos}/15</span>
       </div>
       <div class="cartela-grid">${numsHtml}</div>
     `
@@ -1454,22 +1473,19 @@ function atualizarUltimas() {
 }
 
 function atualizarCartelas(bola) {
-  cartelasDB.forEach(c => {
-    if (c.numeros.includes(bola)) {
+  if (cartelasDB.length === 0) return
+  // Re-renderiza o top 5 com os acertos atualizados
+  renderizarTopCartelas()
+  // Pisca verde no número recém-sorteado em cada card visível
+  setTimeout(() => {
+    cartelasDB.forEach(c => {
       const el = document.getElementById(`cn-${c.id}-${bola}`)
       if (el) {
-        el.classList.remove('hit')
         el.classList.add('hit-new')
-        setTimeout(() => {
-          el.classList.remove('hit-new')
-          el.classList.add('hit')
-        }, 500)
+        setTimeout(() => el.classList.remove('hit-new'), 800)
       }
-      const acertos = c.numeros.filter(n => sorteadas.includes(n)).length
-      const card = document.getElementById(`cartela-${c.id}`)
-      if (card && acertos >= 12) card.classList.add('destaque')
-    }
-  })
+    })
+  }, 50)
 }
 
 function mostrarGanhador(g) {
