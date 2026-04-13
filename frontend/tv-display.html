@@ -842,7 +842,7 @@ html, body {
 <!-- CONFETTI -->
 <div class="confetti-wrap" id="confettiWrap"></div>
 
-<!-- WINNER OVERLAY -->
+<!-- WINNER OVERLAY (aparece e some) -->
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-title">🎉 GANHADOR!</div>
@@ -852,6 +852,13 @@ html, body {
     <div class="winner-premio" id="winnerPremio">R$ 20.000,00</div>
   </div>
 </div>
+
+<!-- PAINEL DE GANHADORES PERMANENTE -->
+<div id="painelGanhadores" style="
+  position:fixed; top:80px; right:16px; z-index:50;
+  display:flex; flex-direction:column; gap:8px;
+  pointer-events:none;
+"></div>
 
 <div class="screen">
 
@@ -1446,17 +1453,17 @@ function atualizarCartelas(bola) {
 
 function mostrarGanhador(g) {
   // Destaca ponto
-  const pontoRow = document.querySelector(`[id^="ponto-"]`);
-  if(pontoRow) pontoRow.classList.add('winner');
+  const pontoRow = document.querySelector(`[id^="ponto-"]`)
+  if (pontoRow) pontoRow.classList.add('winner')
 
-  // Overlay
-  document.getElementById('winnerTipo').textContent = g.tipo;
-  document.getElementById('winnerPonto').textContent = g.ponto;
-  document.getElementById('winnerCartela').textContent = `Cartela ${g.cartela}`;
-  document.getElementById('winnerPremio').textContent = g.premio;
+  // Overlay (temporário)
+  document.getElementById('winnerTipo').textContent    = g.tipo
+  document.getElementById('winnerPonto').textContent   = g.ponto
+  document.getElementById('winnerCartela').textContent = `Cartela ${g.cartela}`
+  document.getElementById('winnerPremio').textContent  = g.premio
 
-  const overlay = document.getElementById('winnerOverlay');
-  overlay.classList.add('show');
+  const overlay = document.getElementById('winnerOverlay')
+  overlay.classList.add('show')
 
   // Fanfarra + narração
   if (window._audioAtivo) {
@@ -1470,11 +1477,36 @@ function mostrarGanhador(g) {
   }
 
   // Confetti
-  spawnConfetti();
+  spawnConfetti()
 
-  setTimeout(() => {
-    overlay.classList.remove('show');
-  }, 8000);
+  setTimeout(() => overlay.classList.remove('show'), 8000)
+
+  // Card permanente na lateral
+  adicionarCardGanhador(g)
+}
+
+function adicionarCardGanhador(g) {
+  const cores = { kuadra: '#4ab0ff', kina: '#f5c842', keno: '#00e87a' }
+  const cor   = cores[g.tipo] || '#f5c842'
+
+  const card = document.createElement('div')
+  card.style.cssText = `
+    background: rgba(11,26,53,0.95);
+    border: 1px solid ${cor};
+    border-left: 4px solid ${cor};
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 220px;
+    box-shadow: 0 0 20px ${cor}40;
+    animation: winnerBox 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  `
+  card.innerHTML = `
+    <div style="font-size:10px;letter-spacing:2px;color:${cor};font-weight:800;text-transform:uppercase;">🏆 ${g.tipo}</div>
+    <div style="font-size:15px;font-weight:700;color:#eef4ff;margin-top:4px;">${g.ponto}</div>
+    <div style="font-size:11px;color:#5a7aaa;margin-top:2px;">Cartela ${g.cartela}</div>
+    <div style="font-size:18px;font-weight:800;color:${cor};margin-top:4px;">${g.premio}</div>
+  `
+  document.getElementById('painelGanhadores').appendChild(card)
 }
 
 function spawnConfetti() {
