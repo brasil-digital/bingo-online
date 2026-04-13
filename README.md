@@ -1,7 +1,6 @@
-# 🎱 Bingo Online — Plataforma Completa
+# Bingo Online — Plataforma Completa
 
-Sistema completo de bingo eletrônico para rede de bares.
-Desenvolvido por Sovereign Digital Group LLC.
+Plataforma de bingo eletrônico ao vivo para rede de bares e pontos vendedores.
 
 ---
 
@@ -10,9 +9,9 @@ Desenvolvido por Sovereign Digital Group LLC.
 ```
 bingo-online/
 ├── frontend/
-│   ├── tv-display.html        ← Telão do bar (fullscreen)
+│   ├── tv-display.html        ← Telão do bar (fullscreen, Realtime)
 │   ├── admin-panel.html       ← Painel do operador central
-│   ├── app-vendedor.html      ← App do vendedor (bar) — PIX + Cash
+│   ├── app-vendedor.html      ← App do vendedor (PIX + Cash)
 │   └── cartela-jogador.html   ← Cartela digital do jogador
 │
 ├── engine/
@@ -24,17 +23,49 @@ bingo-online/
 │   │   └── schema.sql         ← Schema completo do banco
 │   ├── tests/
 │   │   └── engine.test.js     ← 28 testes (todos passando)
+│   ├── seed.js                ← Script de teste com dados reais
 │   ├── index.js
 │   ├── package.json
 │   └── .env.example
 │
 └── docs/
-    └── arquitetura.html       ← Documento de arquitetura técnica
+    └── arquitetura.html
 ```
 
 ---
 
-## Como Rodar os Testes
+## Stack
+
+- **Banco:** Supabase (PostgreSQL + Realtime)
+- **Motor:** Node.js (sem framework)
+- **Frontend:** HTML/CSS/JS puro
+- **Deploy:** Railway (engine) + Netlify (frontend)
+
+---
+
+## Configuração
+
+### 1. Banco de dados
+
+Execute `engine/config/schema.sql` no SQL Editor do Supabase.
+
+### 2. Variáveis de ambiente
+
+```bash
+cd engine
+cp .env.example .env
+```
+
+Preencha `.env`:
+```
+SUPABASE_URL=https://SEU-PROJETO.supabase.co
+SUPABASE_SERVICE_KEY=sua_service_role_key
+BOLA_INTERVALO_MS=4000
+MAX_BOLAS=90
+PORT=3001
+```
+
+### 3. Instalar e testar
 
 ```bash
 cd engine
@@ -42,45 +73,62 @@ npm install
 npm test
 ```
 
-## Como Rodar o Motor
+### 4. Rodar localmente
+
+```bash
+# Terminal 1 — Engine
+cd engine && npm start
+
+# Terminal 2 — Frontend
+cd frontend && npx serve .
+```
+
+### 5. Criar sorteio de teste
 
 ```bash
 cd engine
-cp .env.example .env
-# Preencher SUPABASE_URL e SUPABASE_SERVICE_KEY
-npm start
+node seed.js
 ```
+
+---
 
 ## API do Motor
 
-| Endpoint       | Método | Descrição                        |
-|----------------|--------|----------------------------------|
-| `GET  /health` | GET    | Health check                     |
-| `GET  /status` | GET    | Status atual do sorteio          |
-| `POST /iniciar`| POST   | Iniciar sorteio `{ sorteioId }`  |
-| `POST /pausar` | POST   | Pausar sorteio em andamento      |
-| `POST /resumir`| POST   | Retomar sorteio pausado          |
-| `POST /cancelar`| POST  | Cancelar sorteio                 |
+Todas as rotas (exceto `/health`) requerem `Authorization: Bearer <SUPABASE_SERVICE_KEY>`.
+
+| Endpoint         | Método | Descrição                       |
+|------------------|--------|---------------------------------|
+| `GET  /health`   | GET    | Health check                    |
+| `GET  /status`   | GET    | Status do sorteio em andamento  |
+| `POST /iniciar`  | POST   | Iniciar sorteio `{ sorteioId }` |
+| `POST /pausar`   | POST   | Pausar sorteio                  |
+| `POST /resumir`  | POST   | Retomar sorteio pausado         |
+| `POST /cancelar` | POST   | Cancelar sorteio                |
 
 ---
 
-## Stack
+## URLs de Acesso
 
-- **Banco:** Supabase (PostgreSQL + Realtime)
-- **Motor:** Node.js
-- **Frontend:** HTML/CSS/JS puro (sem framework)
-- **Pagamentos:** Iugu + PIX
-- **Notificações:** n8n + Z-API (WhatsApp)
-- **Deploy:** Railway ou Render
+| Tela | URL |
+|---|---|
+| Telão (TV) | `/tv-display.html` |
+| Admin | `/admin-panel.html` |
+| Vendedor | `/app-vendedor.html?ponto=<uuid>` |
+| Jogador | `/cartela-jogador.html` |
 
 ---
 
-## O que falta para produção
+## Regras do Jogo
 
-- [ ] Conectar Supabase (URL + chaves)
-- [ ] Configurar Iugu (PIX automático)
-- [ ] Subir motor no Railway/Render
-- [ ] Configurar n8n + Z-API
-- [ ] Autenticação (admin + vendedores)
-- [ ] Integração impressora térmica
-- [ ] Testes piloto com 2-3 bares
+- **Kuadra** — 4 acertos em qualquer linha da cartela
+- **Kina** — linha completa (5/5)
+- **Keno** — cartela cheia (15/15)
+- Cada prêmio é dado apenas uma vez por sorteio
+- Se o Keno não for ganho até a bola `acumulado_ate_bola`, o valor acumula para o próximo sorteio
+
+---
+
+## Deploy
+
+- **Engine:** [Railway](https://railway.app) — conecta ao repositório GitHub, define as variáveis de ambiente
+- **Frontend:** [Netlify](https://netlify.app) — arrastar a pasta `frontend/`
