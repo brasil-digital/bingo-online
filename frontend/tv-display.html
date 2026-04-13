@@ -1100,6 +1100,12 @@ async function detectarSorteioAtivo() {
   await carregarGanhadores()
   assinarBolas()
   assinarGanhadores()
+
+  // Anuncia início do sorteio
+  if (window._audioAtivo) {
+    tocarJingleInicio()
+    setTimeout(() => narrarTexto(`Iniciando o sorteio número ${data.numero}. Boa sorte a todos!`), 1500)
+  }
 }
 
 // ─── REALTIME: MUDANÇA DE SORTEIO ────────────────────
@@ -1354,6 +1360,9 @@ function processarBola(bola, animar = true) {
 
   const pct = Math.min(100, (sorteadas.length / acumBola) * 100)
   document.getElementById('acumBar').style.width = pct + '%'
+
+  // Narração da bola
+  if (animar && window._audioAtivo) narrarBola(bola)
 }
 
 function buildGrade() {
@@ -1449,12 +1458,23 @@ function mostrarGanhador(g) {
   const overlay = document.getElementById('winnerOverlay');
   overlay.classList.add('show');
 
+  // Fanfarra + narração
+  if (window._audioAtivo) {
+    tocarFanfarra(g.tipo)
+    const msgs = {
+      kuadra: `Kuadra! Temos um ganhador! ${g.ponto}!`,
+      kina:   `Kina! Parabéns ao ponto ${g.ponto}!`,
+      keno:   `Keno! Temos o grande ganhador! Parabéns ao ponto ${g.ponto}!`
+    }
+    setTimeout(() => narrarTexto(msgs[g.tipo] || 'Temos um ganhador!'), 600)
+  }
+
   // Confetti
   spawnConfetti();
 
   setTimeout(() => {
     overlay.classList.remove('show');
-  }, 5000);
+  }, 8000);
 }
 
 function spawnConfetti() {
@@ -1487,6 +1507,120 @@ function updateProximo() {
   document.getElementById('proximoTimer').textContent =
     String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
+
+// ╔══════════════════════════════════════════════════════╗
+// ║  ÁUDIO — Web Speech API + Web Audio API              ║
+// ╚══════════════════════════════════════════════════════╝
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext
+let audioCtx = null
+
+// Inicializa contexto de áudio após interação do usuário
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx()
+  if (audioCtx.state === 'suspended') audioCtx.resume()
+}
+
+// ── NARRADOR DE BOLAS (Web Speech API) ──────────────────
+function narrarBola(numero) {
+  if (!window.speechSynthesis) return
+  speechSynthesis.cancel()
+  const utter = new SpeechSynthesisUtterance(`Bola ${numero}`)
+  utter.lang  = 'pt-BR'
+  utter.rate  = 0.9
+  utter.pitch = 1.1
+  utter.volume = 1
+  speechSynthesis.speak(utter)
+}
+
+function narrarTexto(texto) {
+  if (!window.speechSynthesis) return
+  speechSynthesis.cancel()
+  const utter = new SpeechSynthesisUtterance(texto)
+  utter.lang  = 'pt-BR'
+  utter.rate  = 0.85
+  utter.pitch = 1.0
+  utter.volume = 1
+  speechSynthesis.speak(utter)
+}
+
+// ── JINGLE DE INÍCIO ────────────────────────────────────
+function tocarJingleInicio() {
+  if (!audioCtx) return
+  const notas = [523, 659, 784, 1047, 784, 1047, 1319]
+  const tempos = [0, 0.15, 0.30, 0.45, 0.65, 0.80, 0.95]
+  notas.forEach((freq, i) => {
+    const osc  = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain)
+    gain.connect(audioCtx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = freq
+    const t = audioCtx.currentTime + tempos[i]
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(0.3, t + 0.05)
+    gain.gain.linearRampToValueAtTime(0, t + 0.25)
+    osc.start(t)
+    osc.stop(t + 0.3)
+  })
+}
+
+// ── FANFARRA DE GANHADOR ────────────────────────────────
+function tocarFanfarra(tipo) {
+  if (!audioCtx) return
+  const configs = {
+    kuadra: { notas:[523,659,784],     dur:0.18, vol:0.35 },
+    kina:   { notas:[523,659,784,1047],dur:0.20, vol:0.40 },
+    keno:   { notas:[523,659,784,1047,1319,1047,1319,1568], dur:0.18, vol:0.5 }
+  }
+  const cfg = configs[tipo] || configs.keno
+  cfg.notas.forEach((freq, i) => {
+    const osc  = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain)
+    gain.connect(audioCtx.destination)
+    osc.type = 'square'
+    osc.frequency.value = freq
+    const t = audioCtx.currentTime + i * cfg.dur
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(cfg.vol, t + 0.03)
+    gain.gain.linearRampToValueAtTime(0, t + cfg.dur - 0.02)
+    osc.start(t)
+    osc.stop(t + cfg.dur)
+  })
+}
+
+// ── BOTÃO DE ÁUDIO NA TELA ──────────────────────────────
+;(function adicionarBotaoAudio() {
+  const btn = document.createElement('button')
+  btn.id = 'btnAudio'
+  btn.textContent = '🔇 Áudio'
+  btn.style.cssText = `
+    position:fixed; bottom:16px; right:16px; z-index:200;
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+    color:#fff; padding:8px 16px; border-radius:100px;
+    font-size:13px; font-weight:700; cursor:pointer;
+    backdrop-filter:blur(8px); letter-spacing:1px;
+  `
+  let audioAtivo = false
+  btn.onclick = () => {
+    initAudio()
+    audioAtivo = !audioAtivo
+    btn.textContent = audioAtivo ? '🔊 Áudio ON' : '🔇 Áudio'
+    btn.style.background = audioAtivo
+      ? 'rgba(0,232,122,0.2)' : 'rgba(255,255,255,0.1)'
+    btn.style.borderColor = audioAtivo
+      ? 'rgba(0,232,122,0.5)' : 'rgba(255,255,255,0.2)'
+    btn.style.color = audioAtivo ? '#00e87a' : '#fff'
+
+    if (audioAtivo) {
+      tocarJingleInicio()
+      setTimeout(() => narrarTexto('Bingo ao vivo. Boa sorte a todos!'), 1500)
+    }
+    window._audioAtivo = audioAtivo
+  }
+  document.body.appendChild(btn)
+})()
 
 // ─── START ────────────────────────────────────────────
 init();
