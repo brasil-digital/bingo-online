@@ -1257,16 +1257,30 @@ async function carregarBolasExistentes() {
 async function carregarGanhadores() {
   const { data } = await sb
     .from('ganhadores')
-    .select('tipo, premio_valor, cartelas(codigo), pontos(nome)')
+    .select('tipo, premio_valor, cartelas(codigo, pontos(nome))')
     .eq('sorteio_id', SORTEIO_ID)
 
   if (!data || data.length === 0) return
 
+  // Limpa painel e reconstrói com todos os ganhadores do sorteio
+  const painel = document.getElementById('painelGanhadores')
+  painel.innerHTML = ''
+  const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+  for (const g of data) {
+    adicionarCardGanhador({
+      tipo:    g.tipo,
+      ponto:   g.cartelas?.pontos?.nome || '—',
+      cartela: `#${g.cartelas?.codigo || '—'}`,
+      premio:  fmt(g.premio_valor)
+    })
+  }
+
+  // Atualiza ticker
   const inner = document.getElementById('tickerInner')
   const items = [...data, ...data].map(g =>
     `<div class="ticker-item">
       <div class="ticker-dot"></div>
-      SORTEIO ATUAL · [${g.tipo.toUpperCase()}] #${g.cartelas?.codigo || '—'} · ${g.pontos?.nome || '—'}
+      SORTEIO ATUAL · [${g.tipo.toUpperCase()}] #${g.cartelas?.codigo || '—'} · ${g.cartelas?.pontos?.nome || '—'}
     </div>`
   ).join('')
   inner.innerHTML = items
@@ -1292,13 +1306,18 @@ function assinarBolas() {
 
 // ─── REALTIME: GANHADORES ─────────────────────────────
 function assinarGanhadores() {
-  sb.channel('ganhadores-realtime')
+  // Sem filtro no servidor (mais confiável) — filtramos no cliente
+  sb.channel('ganhadores-tv-' + SORTEIO_ID)
     .on('postgres_changes', {
       event:  'INSERT',
       schema: 'public',
-      table:  'ganhadores',
-      filter: `sorteio_id=eq.${SORTEIO_ID}`
+      table:  'ganhadores'
     }, async payload => {
+      // Ignora ganhadores de outros sorteios
+      if (payload.new.sorteio_id !== SORTEIO_ID) return
+
+      console.log('[TV] Ganhador recebido via Realtime:', payload.new)
+
       const { data: cartela } = await sb
         .from('cartelas')
         .select('codigo, pontos(nome)')
@@ -1307,7 +1326,7 @@ function assinarGanhadores() {
 
       const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
       mostrarGanhador({
-        tipo:    payload.new.tipo.toUpperCase(),
+        tipo:    payload.new.tipo,
         ponto:   cartela?.pontos?.nome || '—',
         cartela: `#${cartela?.codigo || '—'}`,
         premio:  fmt(payload.new.premio_valor)
@@ -1315,7 +1334,9 @@ function assinarGanhadores() {
 
       await carregarGanhadores()
     })
-    .subscribe()
+    .subscribe(status => {
+      console.log('[TV] Ganhadores channel status:', status)
+    })
 }
 
 // ─── PROCESSAR BOLA ───────────────────────────────────
@@ -1457,7 +1478,7 @@ function mostrarGanhador(g) {
   if (pontoRow) pontoRow.classList.add('winner')
 
   // Overlay (temporário)
-  document.getElementById('winnerTipo').textContent    = g.tipo
+  document.getElementById('winnerTipo').textContent    = g.tipo.toUpperCase()
   document.getElementById('winnerPonto').textContent   = g.ponto
   document.getElementById('winnerCartela').textContent = `Cartela ${g.cartela}`
   document.getElementById('winnerPremio').textContent  = g.premio
@@ -1487,7 +1508,7 @@ function mostrarGanhador(g) {
 
 function adicionarCardGanhador(g) {
   const cores = { kuadra: '#4ab0ff', kina: '#f5c842', keno: '#00e87a' }
-  const cor   = cores[g.tipo] || '#f5c842'
+  const cor   = cores[g.tipo.toLowerCase()] || '#f5c842'
 
   const card = document.createElement('div')
   card.style.cssText = `
