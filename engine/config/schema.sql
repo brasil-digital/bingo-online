@@ -149,6 +149,12 @@ CREATE POLICY "ganhadores_publico_leitura" ON ganhadores
 CREATE POLICY "sorteios_publico_leitura" ON sorteios
   FOR SELECT USING (true);
 
+CREATE POLICY "cartelas_publico_leitura" ON cartelas
+  FOR SELECT USING (true);
+
+CREATE POLICY "pontos_publico_leitura" ON pontos
+  FOR SELECT USING (true);
+
 -- ============================================================
 -- FUNÇÃO: Gerar série de cartelas
 -- ============================================================
