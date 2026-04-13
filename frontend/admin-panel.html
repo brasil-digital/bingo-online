@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo Online — Painel Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #0c0e14;
+  --surface: #131620;
+  --surface2: #1a1e2e;
+  --surface3: #222840;
+  --border: #2a3050;
+  --border2: #3a4570;
+  --accent: #4f9eff;
+  --accent2: #00d68f;
+  --accent3: #ffb340;
+  --accent4: #ff4d6d;
+  --purple: #a855f7;
+  --text: #e2e8f8;
+  --muted: #6070a0;
+  --muted2: #8090b8;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+html,body { min-height:100vh; background:var(--bg); color:var(--text); font-family:'Manrope',sans-serif; font-size:14px; }
+
+/* LAYOUT */
+.layout { display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  overflow-y:auto;
+}
+
+.sidebar-logo {
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+
+.logo-text {
+  font-family:'Syne',sans-serif;
+  font-size:20px; font-weight:800;
+  letter-spacing:2px;
+  color:var(--accent3);
+}
+
+.logo-text span { color:var(--text); }
+.logo-sub { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-top:2px; }
+
+.sidebar-section { padding:12px 12px 4px; }
+.sidebar-section-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:0 8px; margin-bottom:6px; }
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.15s;
+  font-size:13px; font-weight:500; color:var(--muted2);
+  margin-bottom:2px;
+}
+
+.nav-item:hover { background:var(--surface2); color:var(--text); }
+.nav-item.active { background:rgba(79,158,255,0.12); color:var(--accent); }
+.nav-item.active .nav-icon { color:var(--accent); }
+
+.nav-icon { font-size:16px; flex-shrink:0; }
+
+.nav-badge {
+  margin-left:auto;
+  background:var(--accent4);
+  color:#fff; font-size:10px; font-weight:700;
+  padding:1px 6px; border-radius:100px;
+}
+
+.nav-badge.green { background:var(--accent2); }
+
+.sidebar-footer {
+  margin-top:auto;
+  padding:16px;
+  border-top:1px solid var(--border);
+}
+
+.user-card {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px;
+  background:var(--surface2);
+  border-radius:var(--radius-sm);
+}
+
+.user-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg, var(--accent), var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; color:#fff; flex-shrink:0;
+}
+
+.user-name { font-size:12px; font-weight:600; }
+.user-role { font-size:10px; color:var(--muted); }
+
+/* MAIN */
+.main { overflow-y:auto; }
+
+/* TOPBAR */
+.topbar {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:50;
+}
+
+.topbar-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+.topbar-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+
+.topbar-actions { display:flex; align-items:center; gap:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 16px; border-radius:var(--radius-sm);
+  font-size:13px; font-weight:600;
+  cursor:pointer; border:none; transition:all 0.15s;
+  font-family:'Manrope',sans-serif;
+}
+
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#6aadff; }
+.btn-success { background:var(--accent2); color:#000; }
+.btn-success:hover { background:#00f0a8; }
+.btn-danger { background:var(--accent4); color:#fff; }
+.btn-danger:hover { background:#ff6b85; }
+.btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-ghost:hover { background:var(--surface3); }
+.btn-warning { background:var(--accent3); color:#000; }
+.btn-warning:hover { background:#ffc862; }
+
+/* CONTENT */
+.content { padding:24px 28px; }
+
+/* TAB PAGES */
+.tab-page { display:none; }
+.tab-page.active { display:block; }
+
+/* STAT CARDS */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+
+.stat-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative; overflow:hidden;
+  transition:border-color 0.2s;
+}
+
+.stat-card:hover { border-color:var(--border2); }
+
+.stat-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+}
+
+.stat-card.blue::before { background:var(--accent); }
+.stat-card.green::before { background:var(--accent2); }
+.stat-card.orange::before { background:var(--accent3); }
+.stat-card.red::before { background:var(--accent4); }
+
+.stat-label { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:28px; font-weight:700; line-height:1; margin-bottom:6px; }
+.stat-value.blue { color:var(--accent); }
+.stat-value.green { color:var(--accent2); }
+.stat-value.orange { color:var(--accent3); }
+.stat-value.red { color:var(--accent4); }
+.stat-delta { font-size:12px; color:var(--muted); }
+.stat-delta.up { color:var(--accent2); }
+.stat-delta.down { color:var(--accent4); }
+
+/* GRID 2COL */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; }
+
+/* PANEL */
+.panel {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+
+.panel-head {
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+
+.panel-head-title {
+  font-family:'Syne',sans-serif;
+  font-size:14px; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+}
+
+.panel-body { padding:20px; }
+
+/* ── CONFIGURADOR DE RODADA ── */
+.config-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+.field-group { display:flex; flex-direction:column; gap:6px; }
+.field-group.full { grid-column:1/-1; }
+
+.field-label { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+
+.field-input {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px;
+  transition:border-color 0.15s;
+  width:100%;
+}
+
+.field-input:focus { outline:none; border-color:var(--accent); }
+
+select.field-input { cursor:pointer; }
+select.field-input option { background:var(--surface2); }
+
+/* SLIDER */
+.slider-wrap { display:flex; flex-direction:column; gap:8px; }
+
+.slider-row { display:flex; align-items:center; gap:12px; }
+
+.slider {
+  flex:1; -webkit-appearance:none; appearance:none;
+  height:6px; border-radius:3px;
+  background:var(--surface3);
+  cursor:pointer; outline:none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 8px rgba(79,158,255,0.4);
+  cursor:pointer; transition:transform 0.15s;
+}
+
+.slider::-webkit-slider-thumb:hover { transform:scale(1.2); }
+.slider.green::-webkit-slider-thumb { background:var(--accent2); box-shadow:0 0 8px rgba(0,214,143,0.4); }
+.slider.orange::-webkit-slider-thumb { background:var(--accent3); box-shadow:0 0 8px rgba(255,179,64,0.4); }
+.slider.red::-webkit-slider-thumb { background:var(--accent4); box-shadow:0 0 8px rgba(255,77,109,0.4); }
+.slider.purple::-webkit-slider-thumb { background:var(--purple); box-shadow:0 0 8px rgba(168,85,247,0.4); }
+
+.slider-val {
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; font-weight:600;
+  min-width:56px; text-align:right;
+}
+
+.slider-val.blue { color:var(--accent); }
+.slider-val.green { color:var(--accent2); }
+.slider-val.orange { color:var(--accent3); }
+.slider-val.red { color:var(--accent4); }
+.slider-val.purple { color:var(--purple); }
+
+/* PREVIEW BOX */
+.preview-box {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-top:20px;
+}
+
+.preview-title {
+  font-family:'Syne',sans-serif;
+  font-size:13px; font-weight:700;
+  color:var(--muted2); margin-bottom:16px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+
+.preview-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.preview-item { text-align:center; }
+.preview-item-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.preview-item-val { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+
+.rtp-bar-wrap {
+  background:var(--surface3);
+  border-radius:4px; height:12px;
+  display:flex; overflow:hidden;
+  margin-bottom:8px;
+}
+
+.rtp-seg {
+  height:100%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:700; color:#000;
+  transition:width 0.4s ease;
+  overflow:hidden;
+}
+
+.rtp-seg.kuadra { background:var(--accent); }
+.rtp-seg.kina { background:var(--accent3); }
+.rtp-seg.keno { background:var(--accent2); }
+.rtp-seg.ponto { background:var(--purple); }
+.rtp-seg.operador { background:var(--accent4); }
+
+.rtp-legend {
+  display:flex; gap:16px; flex-wrap:wrap;
+}
+
+.rtp-legend-item {
+  display:flex; align-items:center; gap:5px;
+  font-size:11px; color:var(--muted2);
+}
+
+.rtp-dot {
+  width:10px; height:10px; border-radius:2px; flex-shrink:0;
+}
+
+/* TOGGLE */
+.toggle-wrap { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); }
+.toggle-label { font-size:13px; color:var(--text); }
+.toggle-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+
+.toggle {
+  position:relative; display:inline-block;
+  width:44px; height:24px; flex-shrink:0;
+}
+
+.toggle input { opacity:0; width:0; height:0; }
+
+.toggle-slider {
+  position:absolute; cursor:pointer;
+  inset:0; background:var(--surface3);
+  border-radius:100px; transition:0.3s;
+  border:1px solid var(--border);
+}
+
+.toggle-slider:before {
+  content:''; position:absolute;
+  height:16px; width:16px; left:3px; bottom:3px;
+  background:#fff; border-radius:50%;
+  transition:0.3s;
+}
+
+.toggle input:checked + .toggle-slider { background:var(--accent2); border-color:var(--accent2); }
+.toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+
+/* TABLE */
+.table-wrap { overflow-x:auto; }
+
+table { width:100%; border-collapse:collapse; }
+
+th {
+  padding:10px 14px;
+  text-align:left;
+  font-size:11px; font-weight:600;
+  letter-spacing:1px; text-transform:uppercase;
+  color:var(--muted);
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+}
+
+td {
+  padding:12px 14px;
+  font-size:13px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+
+tr:hover td { background:rgba(255,255,255,0.02); }
+
+.badge {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:100px;
+  font-size:11px; font-weight:700;
+}
+
+.badge-green { background:rgba(0,214,143,0.12); color:var(--accent2); }
+.badge-orange { background:rgba(255,179,64,0.12); color:var(--accent3); }
+.badge-blue { background:rgba(79,158,255,0.12); color:var(--accent); }
+.badge-red { background:rgba(255,77,109,0.12); color:var(--accent4); }
+.badge-purple { background:rgba(168,85,247,0.12); color:var(--purple); }
+
+/* ACTIVITY */
+.activity-list { display:flex; flex-direction:column; gap:0; }
+
+.activity-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+
+.activity-item:last-child { border-bottom:none; }
+
+.activity-dot {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px;
+}
+
+.activity-text { font-size:13px; line-height:1.5; flex:1; }
+.activity-text strong { color:var(--text); }
+.activity-time { font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; white-space:nowrap; }
+
+/* PONTOS TABLE ACTIONS */
+.action-btns { display:flex; gap:6px; }
+
+.btn-xs {
+  padding:4px 10px; font-size:11px; font-weight:600;
+  border-radius:4px; cursor:pointer; border:none;
+  font-family:'Manrope',sans-serif; transition:all 0.15s;
+}
+
+.btn-xs-primary { background:rgba(79,158,255,0.15); color:var(--accent); }
+.btn-xs-primary:hover { background:rgba(79,158,255,0.25); }
+.btn-xs-danger { background:rgba(255,77,109,0.15); color:var(--accent4); }
+.btn-xs-danger:hover { background:rgba(255,77,109,0.25); }
+.btn-xs-success { background:rgba(0,214,143,0.15); color:var(--accent2); }
+.btn-xs-success:hover { background:rgba(0,214,143,0.25); }
+
+/* FINANCIAL */
+.fin-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.fin-row:last-child { border-bottom:none; }
+.fin-label { font-size:13px; color:var(--muted2); }
+.fin-val { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:600; }
+
+/* CHART BARS */
+.chart-bar-group { display:flex; flex-direction:column; gap:8px; }
+.chart-bar-item { display:flex; align-items:center; gap:12px; }
+.chart-bar-label { font-size:12px; color:var(--muted2); min-width:100px; }
+.chart-bar-track { flex:1; height:8px; background:var(--surface3); border-radius:4px; overflow:hidden; }
+.chart-bar-fill { height:100%; border-radius:4px; transition:width 1s ease; }
+.chart-bar-val { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted2); min-width:80px; text-align:right; }
+
+/* MINI CHART */
+.mini-chart { display:flex; align-items:flex-end; gap:3px; height:48px; padding-top:8px; }
+.mini-bar {
+  flex:1; border-radius:2px 2px 0 0;
+  background:rgba(79,158,255,0.3);
+  transition:height 0.3s;
+  min-height:2px;
+}
+.mini-bar.today { background:var(--accent); }
+
+/* SEPARATOR */
+.sep { height:1px; background:var(--border); margin:20px 0; }
+
+/* SECTION HEADER */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.section-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; }
+
+/* ALERT */
+.alert {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:14px 16px;
+  border-radius:var(--radius-sm);
+  font-size:13px; margin-bottom:16px;
+}
+
+.alert-success { background:rgba(0,214,143,0.08); border:1px solid rgba(0,214,143,0.2); color:var(--accent2); }
+.alert-warning { background:rgba(255,179,64,0.08); border:1px solid rgba(255,179,64,0.2); color:var(--accent3); }
+.alert-info { background:rgba(79,158,255,0.08); border:1px solid rgba(79,158,255,0.2); color:var(--accent); }
+
+/* RODADA STATUS */
+.rodada-status {
+  display:flex; align-items:center; gap:16px;
+  padding:16px 20px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:24px;
+}
+
+.rodada-dot { width:12px; height:12px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+.rodada-dot.ativa { background:var(--accent2); animation:pulse 1.5s infinite; box-shadow:0 0 8px rgba(0,214,143,0.5); }
+.rodada-dot.pausada { background:var(--accent3); }
+
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+
+.rodada-info { flex:1; }
+.rodada-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; }
+.rodada-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+
+.rodada-controls { display:flex; gap:8px; }
+
+/* DONUT CHART */
+.donut-wrap { display:flex; align-items:center; gap:24px; }
+.donut-svg { flex-shrink:0; }
+.donut-legend { flex:1; display:flex; flex-direction:column; gap:8px; }
+.donut-leg-item { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+.donut-leg-label { display:flex; align-items:center; gap:6px; color:var(--muted2); }
+.donut-leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.donut-leg-val { font-family:'JetBrains Mono',monospace; font-weight:600; }
+
+/* INPUT GROUP */
+.input-group { display:flex; gap:8px; }
+.input-group .field-input { flex:1; }
+
+/* SCROLL */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+
+/* ANIM */
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.tab-page.active { animation:fadeIn 0.25s ease; }
+
+.tag { font-size:10px; font-family:'JetBrains Mono',monospace; padding:2px 6px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">BINGO <span>ADMIN</span></div>
+    <div class="logo-sub">Painel de Controle</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Principal</div>
+    <div class="nav-item active" onclick="showTab('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showTab('rodada')">
+      <span class="nav-icon">🎱</span> Nova Rodada
+    </div>
+    <div class="nav-item" onclick="showTab('financeiro')">
+      <span class="nav-icon">💰</span> Financeiro
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Gestão</div>
+    <div class="nav-item" onclick="showTab('pontos')">
+      <span class="nav-icon">📍</span> Pontos
+      <span class="nav-badge green">24</span>
+    </div>
+    <div class="nav-item" onclick="showTab('sorteios')">
+      <span class="nav-icon">🏆</span> Histórico
+    </div>
+    <div class="nav-item" onclick="showTab('cartelas')">
+      <span class="nav-icon">🃏</span> Cartelas
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Sistema</div>
+    <div class="nav-item" onclick="showTab('config')">
+      <span class="nav-icon">⚙️</span> Configurações
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">R</div>
+      <div>
+        <div class="user-name">Ronny</div>
+        <div class="user-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-sub" id="topbarSub">Visão geral da plataforma · 13/04/2026</div>
+    </div>
+    <div class="topbar-actions">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.3);border-radius:100px;">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--accent2);animation:pulse 1.5s infinite;"></div>
+        <span style="font-size:12px;font-weight:700;color:var(--accent2);letter-spacing:1px;">SORTEIO #2474 AO VIVO</span>
+      </div>
+      <button class="btn btn-primary" onclick="showTab('rodada')">+ Nova Rodada</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DASHBOARD -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page active" id="tab-dashboard">
+
+    <div class="stats-row">
+      <div class="stat-card blue">
+        <div class="stat-label">Receita Hoje</div>
+        <div class="stat-value blue">R$3.240</div>
+        <div class="stat-delta up">↑ 18% vs ontem</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Sorteios Hoje</div>
+        <div class="stat-value green">12</div>
+        <div class="stat-delta up">↑ 4 rodadas</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Cartelas Vendidas</div>
+        <div class="stat-value orange">1.847</div>
+        <div class="stat-delta up">↑ 23%</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Pontos Ativos</div>
+        <div class="stat-value red">24</div>
+        <div class="stat-delta">de 30 cadastrados</div>
+      </div>
+    </div>
+
+    <!-- RODADA ATUAL -->
+    <div class="rodada-status">
+      <div class="rodada-dot ativa"></div>
+      <div class="rodada-info">
+        <div class="rodada-name">Sorteio #2474 — KENO EM ANDAMENTO</div>
+        <div class="rodada-meta">Iniciado 20:00 · 27 bolas sorteadas · 156 cartelas vendidas · Pool R$312,00</div>
+      </div>
+      <div class="rodada-controls">
+        <button class="btn btn-ghost btn-xs">⏸ Pausar</button>
+        <button class="btn btn-danger btn-xs">■ Encerrar</button>
+        <a href="bingo-tv-display.html" target="_blank"><button class="btn btn-primary btn-xs">📺 Ver Display</button></a>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- RECEITA POR HORA -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-title">📈 Receita por Rodada (hoje)</div>
+        </div>
+        <div class="panel-body">
+          <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:8px;">
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:40%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:65%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:50%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:80%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:55%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:70%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:45%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:90%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:60%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:75%;"></div>
+            <div style="flex:1;background:rgba(79,158,255,0.2);border-radius:2px 2px 0 0;height:55%;"></div>
+            <div style="flex:1;background:var(--accent);border-radius:2px 2px 0 0;height:100%;box-shadow:0 0 8px rgba(79,158,255,0.4);"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);">
+            <span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span><span>20:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DISTRIBUIÇÃO RTP -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-title">🥧 Distribuição do Pool</div>
+          <span style="font-size:11px;color:var(--muted);">Sorteio atual</span>
+        </div>
+        <div class="panel-body">
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#1a1e2e" stroke-width="20"/>
+              <!-- Kuadra 10% -->
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#4f9eff" stroke-width="20"
+                stroke-dasharray="22 198" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+              <!-- Kina 20% -->
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#ffb340" stroke-width="20"
+                stroke-dasharray="44 176" stroke-dashoffset="-22" transform="rotate(-90 50 50)"/>
+              <!-- Keno 30% -->
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#00d68f" stroke-width="20"
+                stroke-dasharray="66 154" stroke-dashoffset="-66" transform="rotate(-90 50 50)"/>
+              <!-- Pontos 20% -->
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#a855f7" stroke-width="20"
+                stroke-dasharray="44 176" stroke-dashoffset="-132" transform="rotate(-90 50 50)"/>
+              <!-- Operador 20% -->
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#ff4d6d" stroke-width="20"
+                stroke-dasharray="44 176" stroke-dashoffset="-176" transform="rotate(-90 50 50)"/>
+              <text x="50" y="46" text-anchor="middle" fill="#e2e8f8" font-size="11" font-family="Syne" font-weight="700">RTP</text>
+              <text x="50" y="59" text-anchor="middle" fill="#4f9eff" font-size="10" font-family="JetBrains Mono" font-weight="600">60%</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="donut-leg-item">
+                <div class="donut-leg-label"><div class="donut-leg-dot" style="background:var(--accent)"></div>Kuadra</div>
+                <div class="donut-leg-val" style="color:var(--accent)">10% · R$31</div>
+              </div>
+              <div class="donut-leg-item">
+                <div class="donut-leg-label"><div class="donut-leg-dot" style="background:var(--accent3)"></div>Kina</div>
+                <div class="donut-leg-val" style="color:var(--accent3)">20% · R$62</div>
+              </div>
+              <div class="donut-leg-item">
+                <div class="donut-leg-label"><div class="donut-leg-dot" style="background:var(--accent2)"></div>Keno</div>
+                <div class="donut-leg-val" style="color:var(--accent2)">30% · R$94</div>
+              </div>
+              <div class="donut-leg-item">
+                <div class="donut-leg-label"><div class="donut-leg-dot" style="background:var(--purple)"></div>Pontos</div>
+                <div class="donut-leg-val" style="color:var(--purple)">20% · R$62</div>
+              </div>
+              <div class="donut-leg-item">
+                <div class="donut-leg-label"><div class="donut-leg-dot" style="background:var(--accent4)"></div>Operador</div>
+                <div class="donut-leg-val" style="color:var(--accent4)">20% · R$62</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMAS ATIVIDADES -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-title">⚡ Atividade em Tempo Real</div>
+        <span class="badge badge-green">AO VIVO</span>
+      </div>
+      <div class="panel-body">
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent2)"></div>
+            <div class="activity-text flex-1"><strong>KENO GANHADOR</strong> — Cartela #481035 · Bar do Marcos · UBA ganhou <strong style="color:var(--accent2)">R$20.000,00</strong></div>
+            <div class="activity-time">20:14</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent3)"></div>
+            <div class="activity-text flex-1"><strong>KINA</strong> — Cartela #480919 · UBA-Tanquinho ganhou <strong style="color:var(--accent3)">R$10.000,00</strong></div>
+            <div class="activity-time">20:11</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent)"></div>
+            <div class="activity-text flex-1">156 cartelas vendidas para sorteio #2474</div>
+            <div class="activity-time">20:00</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--purple)"></div>
+            <div class="activity-text flex-1">Novo ponto cadastrado: <strong>Bar Vila Gomes · Leopoldina</strong></div>
+            <div class="activity-time">19:45</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent4)"></div>
+            <div class="activity-text flex-1">Sorteio #2473 encerrado — arrecadação R$270,00</div>
+            <div class="activity-time">19:30</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- NOVA RODADA -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-rodada">
+
+    <div class="alert alert-info">
+      💡 Configure todos os parâmetros abaixo. O simulador financeiro calcula automaticamente os valores em tempo real.
+    </div>
+
+    <div class="grid-2" style="align-items:start;">
+
+      <!-- CONFIGURAÇÕES GERAIS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-title">🎱 Configuração da Rodada</div>
+        </div>
+        <div class="panel-body">
+          <div class="config-grid">
+
+            <div class="field-group">
+              <div class="field-label">Número do Sorteio</div>
+              <input class="field-input" type="text" value="2475" id="cfg-numero">
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Data e Hora</div>
+              <input class="field-input" type="datetime-local" value="2026-04-13T21:00">
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Total de Cartelas</div>
+              <input class="field-input" type="number" value="1000" id="cfg-cartelas"
+                oninput="recalcular()" min="100" max="240000">
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Preço por Cartela (R$)</div>
+              <input class="field-input" type="number" value="2.00" id="cfg-preco"
+                oninput="recalcular()" step="0.50" min="0.50" max="50">
+            </div>
+
+            <div class="field-group full">
+              <div class="field-label">Intervalo entre bolas (segundos)</div>
+              <div class="slider-wrap">
+                <div class="slider-row">
+                  <input type="range" class="slider" min="2" max="10" value="4" id="sl-intervalo"
+                    oninput="document.getElementById('sv-intervalo').textContent=this.value+'s'">
+                  <span class="slider-val blue" id="sv-intervalo">4s</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group full">
+              <div class="field-label">Acumulado até bola nº</div>
+              <div class="slider-wrap">
+                <div class="slider-row">
+                  <input type="range" class="slider orange" min="15" max="70" value="35" id="sl-acum"
+                    oninput="document.getElementById('sv-acum').textContent='bola '+this.value; recalcular()">
+                  <span class="slider-val orange" id="sv-acum">bola 35</span>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);">Se Keno não fechar antes desta bola, prêmio acumula para próxima rodada</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- DISTRIBUIÇÃO DO POOL -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-title">💸 Distribuição do Pool (%)</div>
+        </div>
+        <div class="panel-body">
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div class="field-group">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div class="field-label" style="color:var(--accent)">% Kuadra</div>
+                <span class="slider-val blue" id="sv-kuadra">10%</span>
+              </div>
+              <input type="range" class="slider" min="5" max="30" value="10" id="sl-kuadra"
+                oninput="sliderUpdate('kuadra',this.value)">
+            </div>
+
+            <div class="field-group">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div class="field-label" style="color:var(--accent3)">% Kina</div>
+                <span class="slider-val orange" id="sv-kina">20%</span>
+              </div>
+              <input type="range" class="slider orange" min="10" max="40" value="20" id="sl-kina"
+                oninput="sliderUpdate('kina',this.value)">
+            </div>
+
+            <div class="field-group">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div class="field-label" style="color:var(--accent2)">% Keno</div>
+                <span class="slider-val green" id="sv-keno">30%</span>
+              </div>
+              <input type="range" class="slider green" min="15" max="50" value="30" id="sl-keno"
+                oninput="sliderUpdate('keno',this.value)">
+            </div>
+
+            <div class="field-group">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div class="field-label" style="color:var(--purple)">% Comissão Pontos</div>
+                <span class="slider-val purple" id="sv-ponto">20%</span>
+              </div>
+              <input type="range" class="slider purple" min="10" max="35" value="20" id="sl-ponto"
+                oninput="sliderUpdate('ponto',this.value)">
+            </div>
+
+            <div style="padding:12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--muted2)">Sua margem (operador)</span>
+                <span class="slider-val red" id="sv-operador" style="font-family:'JetBrains Mono';font-size:16px;color:var(--accent4)">20%</span>
+              </div>
+              <div id="margem-alert" style="font-size:11px;color:var(--accent2);">✅ Distribuição equilibrada</div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PREVIEW FINANCEIRO -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-title">🧮 Simulador Financeiro</div>
+        <span style="font-size:11px;color:var(--muted);">Atualiza em tempo real</span>
+      </div>
+      <div class="panel-body">
+
+        <div class="preview-grid" id="previewGrid">
+          <div class="preview-item">
+            <div class="preview-item-label">Arrecadação Total</div>
+            <div class="preview-item-val" style="color:var(--text)" id="pv-total">R$ 2.000,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Prêmio Kuadra</div>
+            <div class="preview-item-val" style="color:var(--accent)" id="pv-kuadra">R$ 200,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Prêmio Kina</div>
+            <div class="preview-item-val" style="color:var(--accent3)" id="pv-kina">R$ 400,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Prêmio Keno</div>
+            <div class="preview-item-val" style="color:var(--accent2)" id="pv-keno">R$ 600,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Comissão Pontos</div>
+            <div class="preview-item-val" style="color:var(--purple)" id="pv-ponto">R$ 400,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Sua Receita</div>
+            <div class="preview-item-val" style="color:var(--accent4)" id="pv-operador">R$ 400,00</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">RTP Total</div>
+            <div class="preview-item-val" style="color:var(--text)" id="pv-rtp">60%</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-item-label">Receita / Dia (×4 rodadas)</div>
+            <div class="preview-item-val" style="color:var(--accent2)" id="pv-dia">R$ 1.600,00</div>
+          </div>
+        </div>
+
+        <!-- BAR RTP -->
+        <div class="rtp-bar-wrap" id="rtpBar">
+          <div class="rtp-seg kuadra" id="seg-kuadra" style="width:10%">K</div>
+          <div class="rtp-seg kina" id="seg-kina" style="width:20%">Ki</div>
+          <div class="rtp-seg keno" id="seg-keno" style="width:30%">Ke</div>
+          <div class="rtp-seg ponto" id="seg-ponto" style="width:20%">P</div>
+          <div class="rtp-seg operador" id="seg-op" style="width:20%">Op</div>
+        </div>
+
+        <div class="rtp-legend">
+          <div class="rtp-legend-item"><div class="rtp-dot" style="background:var(--accent)"></div>Kuadra</div>
+          <div class="rtp-legend-item"><div class="rtp-dot" style="background:var(--accent3)"></div>Kina</div>
+          <div class="rtp-legend-item"><div class="rtp-dot" style="background:var(--accent2)"></div>Keno</div>
+          <div class="rtp-legend-item"><div class="rtp-dot" style="background:var(--purple)"></div>Pontos</div>
+          <div class="rtp-legend-item"><div class="rtp-dot" style="background:var(--accent4)"></div>Operador</div>
+        </div>
+
+        <!-- PROJEÇÃO MENSAL -->
+        <div class="sep"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div style="text-align:center;padding:16px;background:var(--surface2);border-radius:var(--radius-sm);">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Receita/Dia</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent4)" id="proj-dia">R$ 1.600</div>
+          </div>
+          <div style="text-align:center;padding:16px;background:var(--surface2);border-radius:var(--radius-sm);">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Receita/Mês</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent2)" id="proj-mes">R$ 48.000</div>
+          </div>
+          <div style="text-align:center;padding:16px;background:var(--surface2);border-radius:var(--radius-sm);">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Com 10 Pontos/Mês</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent3)" id="proj-rede">R$ 480.000</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- OPÇÕES AVANÇADAS -->
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head">
+        <div class="panel-head-title">🔧 Opções Avançadas</div>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">Super Rodada</div><div style="font-size:11px;color:var(--muted);">Ativa jackpot acumulado especial</div></div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">Duplo Kino</div><div style="font-size:11px;color:var(--muted);">Dois prêmios Kina por rodada</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">Notificação WhatsApp</div><div style="font-size:11px;color:var(--muted);">Avisa compradores 15 min antes</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">Cartela Digital</div><div style="font-size:11px;color:var(--muted);">Permite compra pelo celular</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">PIX Automático</div><div style="font-size:11px;color:var(--muted);">Repasse automático ao ganhador</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div><div class="toggle-label">Replay no Display</div><div style="font-size:11px;color:var(--muted);">Exibe replay do ganhador na TV</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+          <button class="btn btn-ghost">Salvar Rascunho</button>
+          <button class="btn btn-warning">📋 Gerar Cartelas</button>
+          <button class="btn btn-success" onclick="alert('✅ Sorteio #2475 agendado para 21:00!')">✅ Agendar Sorteio</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FINANCEIRO -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-financeiro">
+
+    <div class="stats-row">
+      <div class="stat-card green">
+        <div class="stat-label">Receita Total (mês)</div>
+        <div class="stat-value green">R$41.280</div>
+        <div class="stat-delta up">↑ 34% vs mês anterior</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Total Prêmios Pagos</div>
+        <div class="stat-value blue">R$24.768</div>
+        <div class="stat-delta">RTP médio 60%</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Comissões Pontos</div>
+        <div class="stat-value orange">R$8.256</div>
+        <div class="stat-delta">24 pontos ativos</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Lucro Líquido</div>
+        <div class="stat-value red">R$8.256</div>
+        <div class="stat-delta up">↑ Margem 20%</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">📊 Top Pontos por Receita</div></div>
+        <div class="panel-body">
+          <div class="chart-bar-group">
+            <div class="chart-bar-item">
+              <div class="chart-bar-label">Bar do Marcos</div>
+              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:92%;background:var(--accent2)"></div></div>
+              <div class="chart-bar-val">R$4.120</div>
+            </div>
+            <div class="chart-bar-item">
+              <div class="chart-bar-label">Cabana do Evair</div>
+              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:78%;background:var(--accent)"></div></div>
+              <div class="chart-bar-val">R$3.480</div>
+            </div>
+            <div class="chart-bar-item">
+              <div class="chart-bar-label">Bar Teixeira</div>
+              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:65%;background:var(--accent3)"></div></div>
+              <div class="chart-bar-val">R$2.920</div>
+            </div>
+            <div class="chart-bar-item">
+              <div class="chart-bar-label">Cor Bar do Tiao</div>
+              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:55%;background:var(--purple)"></div></div>
+              <div class="chart-bar-val">R$2.460</div>
+            </div>
+            <div class="chart-bar-item">
+              <div class="chart-bar-label">Capinha Super</div>
+              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:48%;background:var(--accent4)"></div></div>
+              <div class="chart-bar-val">R$2.140</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">💰 Resumo Financeiro</div></div>
+        <div class="panel-body">
+          <div class="fin-row">
+            <div class="fin-label">Total arrecadado</div>
+            <div class="fin-val" style="color:var(--text)">R$ 41.280,00</div>
+          </div>
+          <div class="fin-row">
+            <div class="fin-label">(-) Prêmio Kuadra</div>
+            <div class="fin-val" style="color:var(--accent)">R$ 4.128,00</div>
+          </div>
+          <div class="fin-row">
+            <div class="fin-label">(-) Prêmio Kina</div>
+            <div class="fin-val" style="color:var(--accent3)">R$ 8.256,00</div>
+          </div>
+          <div class="fin-row">
+            <div class="fin-label">(-) Prêmio Keno</div>
+            <div class="fin-val" style="color:var(--accent2)">R$ 12.384,00</div>
+          </div>
+          <div class="fin-row">
+            <div class="fin-label">(-) Comissão Pontos (20%)</div>
+            <div class="fin-val" style="color:var(--purple)">R$ 8.256,00</div>
+          </div>
+          <div class="sep" style="margin:10px 0;"></div>
+          <div class="fin-row">
+            <div class="fin-label" style="font-weight:700;color:var(--text)">= Lucro Líquido (20%)</div>
+            <div class="fin-val" style="color:var(--accent4);font-size:18px;">R$ 8.256,00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA ÚLTIMOS SORTEIOS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-title">📋 Últimos Sorteios</div>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;">Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sorteio</th><th>Data</th><th>Cartelas</th><th>Arrecadação</th>
+              <th>Prêmios</th><th>Comissões</th><th>Lucro</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>#2474</strong></td><td>13/04 20:00</td><td>156</td><td>R$312</td><td>R$187</td><td>R$62</td><td style="color:var(--accent2)">R$62</td><td><span class="badge badge-green">AO VIVO</span></td></tr>
+            <tr><td><strong>#2473</strong></td><td>13/04 19:30</td><td>135</td><td>R$270</td><td>R$162</td><td>R$54</td><td style="color:var(--accent2)">R$54</td><td><span class="badge badge-blue">Finalizado</span></td></tr>
+            <tr><td><strong>#2472</strong></td><td>13/04 19:00</td><td>208</td><td>R$416</td><td>R$250</td><td>R$83</td><td style="color:var(--accent2)">R$83</td><td><span class="badge badge-blue">Finalizado</span></td></tr>
+            <tr><td><strong>#2458</strong></td><td>10/04 19:30</td><td>750</td><td>R$1.500</td><td>R$900</td><td>R$300</td><td style="color:var(--accent2)">R$300</td><td><span class="badge badge-blue">Finalizado</span></td></tr>
+            <tr><td><strong>#2215</strong></td><td>09/04 20:00</td><td>1.200</td><td>R$2.400</td><td>R$1.440</td><td>R$480</td><td style="color:var(--accent2)">R$480</td><td><span class="badge badge-blue">Finalizado</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PONTOS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-pontos">
+
+    <div class="section-header">
+      <div class="section-title">Pontos Vendedores</div>
+      <button class="btn btn-primary" onclick="alert('Formulário de cadastro de novo ponto')">+ Cadastrar Ponto</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-title">📍 Todos os Pontos (24 ativos)</div>
+        <input class="field-input" style="width:200px;padding:6px 12px;font-size:12px;" placeholder="🔍 Buscar ponto...">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>Cidade</th><th>Cartelas/Sorteio</th><th>Comissão</th><th>Status</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="pontosTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HISTÓRICO -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-sorteios">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-title">🏆 Histórico de Sorteios e Ganhadores</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Sorteio</th><th>Tipo</th><th>Cartela</th><th>Ponto</th><th>Bola</th><th>Prêmio</th><th>Pago em</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>#2474</td><td><span class="badge badge-green">KENO</span></td><td>#481035</td><td>Bar do Marcos</td><td>50ª</td><td style="color:var(--accent2)"><strong>R$20.000</strong></td><td>—</td></tr>
+            <tr><td>#2474</td><td><span class="badge badge-orange">KINA</span></td><td>#480919</td><td>UBA-Tanquinho</td><td>35ª</td><td style="color:var(--accent3)"><strong>R$10.000</strong></td><td>20:11</td></tr>
+            <tr><td>#2474</td><td><span class="badge badge-blue">KUADRA</span></td><td>#481020</td><td>Bar do Marcos</td><td>22ª</td><td style="color:var(--accent)"><strong>R$5.000</strong></td><td>20:08</td></tr>
+            <tr><td>#2458</td><td><span class="badge badge-green">KENO</span></td><td>#49852</td><td>Cor Bar do Tiao</td><td>8ª</td><td style="color:var(--accent2)"><strong>R$20.000</strong></td><td>19:38</td></tr>
+            <tr><td>#2215</td><td><span class="badge badge-green">KENO</span></td><td>#87084</td><td>Pereira Bar</td><td>12ª</td><td style="color:var(--accent2)"><strong>R$20.000</strong></td><td>20:22</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CARTELAS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-cartelas">
+    <div class="alert alert-warning">
+      ⚠️ Geração de cartelas é um processo irreversível. Certifique-se de que todas as configurações estão corretas antes de gerar.
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-head-title">🃏 Gerar Série de Cartelas</div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div class="field-group">
+            <div class="field-label">Sorteio vinculado</div>
+            <select class="field-input"><option>#2475 — 13/04 21:00</option><option>#2476 — 14/04 20:00</option></select>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Quantidade</div>
+            <input class="field-input" type="number" value="1000" min="100" max="240000">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Tipo de Série</div>
+            <select class="field-input">
+              <option>90 bolas · 15 números (padrão)</option>
+              <option>75 bolas · 15 números</option>
+              <option>Ganhador único garantido</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-warning" onclick="alert('Gerando 1.000 cartelas para sorteio #2475...\n✅ Concluído em 2.3s')">⚡ Gerar Cartelas Agora</button>
+        <span style="font-size:12px;color:var(--muted);margin-left:12px;">Última geração: 1.000 cartelas para #2474 em 13/04 19:45</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CONFIG -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-config">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">⚙️ Configurações Gerais</div></div>
+        <div class="panel-body">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="field-group">
+              <div class="field-label">Nome da Plataforma</div>
+              <input class="field-input" value="Bingo Online">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Supabase URL</div>
+              <input class="field-input" type="url" placeholder="https://xxx.supabase.co">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Iugu API Key</div>
+              <input class="field-input" type="password" placeholder="••••••••••••••••">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Z-API Token (WhatsApp)</div>
+              <input class="field-input" type="password" placeholder="••••••••••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="alert('Configurações salvas!')">Salvar Configurações</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">🔒 Segurança</div></div>
+        <div class="panel-body">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="toggle-wrap">
+              <div><div class="toggle-label">Autenticação 2FA</div><div style="font-size:11px;color:var(--muted);">Obrigatório para admin</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div><div class="toggle-label">Log de auditoria</div><div style="font-size:11px;color:var(--muted);">Registra todas as ações</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div><div class="toggle-label">Seed auditável</div><div style="font-size:11px;color:var(--muted);">Hash do sorteio publicado antes</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div><div class="toggle-label">Modo manutenção</div><div style="font-size:11px;color:var(--muted);">Bloqueia novos sorteios</div></div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://imvfraakhmtjfdclqfar.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdmZyYWFraG10amZkY2xxZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODE5NzMsImV4cCI6MjA5MTY1Nzk3M30.OmZ2urzWq9p7W6q5n2im6TfrOdGMWHAII3PTWQx4Q44'
+const ENGINE_URL    = 'http://localhost:3001'
+const ENGINE_KEY    = 'sb_secret_ygjU_ypk-mCZTdlTR5oGMQ_zuJumXbt'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+let sorteioAtivo = null
+
+// ── NAV ──────────────────────────────────────────────────
+const titles = {
+  dashboard: ['Dashboard','Visão geral da plataforma'],
+  rodada:    ['Nova Rodada','Configure e agende um sorteio'],
+  financeiro:['Financeiro','Receitas, prêmios e comissões'],
+  pontos:    ['Pontos Vendedores','Gerencie sua rede de parceiros'],
+  sorteios:  ['Histórico de Sorteios','Ganhadores e resultados'],
+  cartelas:  ['Cartelas','Geração e gestão de séries'],
+  config:    ['Configurações','Sistema e integrações'],
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('tab-'+id).classList.add('active')
+  event.currentTarget && event.currentTarget.classList.add('active')
+  document.getElementById('topbarTitle').textContent = titles[id][0]
+  document.getElementById('topbarSub').textContent   = titles[id][1] + ' · ' + new Date().toLocaleDateString('pt-BR')
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.getAttribute('onclick')?.includes("'"+id+"'")) n.classList.add('active')
+  })
+}
+
+// ── FORMATAÇÃO ────────────────────────────────────────────
+function fmt(val) {
+  return 'R$ ' + Number(val||0).toLocaleString('pt-BR', {minimumFractionDigits:2})
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+async function carregarDashboard() {
+  // Sorteio ativo/agendado
+  const { data: s } = await sb
+    .from('sorteios')
+    .select('*')
+    .in('status', ['ativo','agendado'])
+    .order('inicio_em', { ascending: false })
+    .limit(1)
+    .single()
+
+  sorteioAtivo = s
+
+  if (s) {
+    const el = document.getElementById('dashboard-sorteio-status')
+    if (el) el.textContent = `Sorteio #${s.numero} · ${s.status.toUpperCase()}`
+  }
+
+  // Contagens
+  const [{ count: totalPontos }, { count: totalCartelas }, { count: totalGanhadores }] =
+    await Promise.all([
+      sb.from('pontos').select('id', { count:'exact', head:true }).eq('ativo', true),
+      sb.from('cartelas').select('id', { count:'exact', head:true })
+        .eq('status', 'paga').eq('sorteio_id', s?.id || ''),
+      sb.from('ganhadores').select('id', { count:'exact', head:true })
+        .eq('sorteio_id', s?.id || ''),
+    ])
+
+  setStat('stat-pontos',  totalPontos  || 0)
+  setStat('stat-cartelas', totalCartelas || 0)
+  setStat('stat-ganhadores', totalGanhadores || 0)
+  if (s) setStat('stat-arrecadacao', fmt(s.arrecadacao_total || 0))
+}
+
+function setStat(id, val) {
+  const el = document.getElementById(id)
+  if (el) el.textContent = val
+}
+
+// ── CONTROLES DO ENGINE ───────────────────────────────────
+async function engineAction(endpoint) {
+  const body = endpoint === 'iniciar' && sorteioAtivo
+    ? JSON.stringify({ sorteioId: sorteioAtivo.id })
+    : '{}'
+
+  try {
+    const res = await fetch(`${ENGINE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ENGINE_KEY}`
+      },
+      body
+    })
+    const json = await res.json()
+    alert(endpoint.toUpperCase() + ': ' + JSON.stringify(json))
+    await carregarDashboard()
+  } catch(e) {
+    alert('Erro ao chamar engine: ' + e.message)
+  }
+}
+
+// ── CRIAR NOVO SORTEIO ────────────────────────────────────
+async function criarSorteio() {
+  const cartelas = parseInt(document.getElementById('cfg-cartelas')?.value) || 1000
+  const preco    = parseFloat(document.getElementById('cfg-preco')?.value)  || 2
+  const pKuadra  = parseInt(document.getElementById('sl-kuadra')?.value)    || 10
+  const pKina    = parseInt(document.getElementById('sl-kina')?.value)      || 20
+  const pKeno    = parseInt(document.getElementById('sl-keno')?.value)      || 30
+  const pPonto   = parseInt(document.getElementById('sl-ponto')?.value)     || 20
+  const inicioEl = document.getElementById('cfg-inicio')
+
+  const inicio = inicioEl?.value
+    ? new Date(inicioEl.value).toISOString()
+    : new Date().toISOString()
+
+  const { data, error } = await sb.from('sorteios').insert({
+    status:             'agendado',
+    inicio_em:          inicio,
+    preco_cartela:      preco,
+    total_cartelas:     cartelas,
+    pct_kuadra:         pKuadra,
+    pct_kina:           pKina,
+    pct_keno:           pKeno,
+    pct_ponto:          pPonto,
+    acumulado_ate_bola: 35,
+    arrecadacao_total:  0
+  }).select('id, numero').single()
+
+  if (error) { alert('Erro: ' + error.message); return }
+
+  alert(`✅ Sorteio #${data.numero} criado!\nID: ${data.id}`)
+  await carregarDashboard()
+}
+
+// ── CALCULADORA FINANCEIRA ────────────────────────────────
+function sliderUpdate(id, val) {
+  document.getElementById('sv-'+id).textContent = val+'%'
+  recalcular()
+}
+
+function recalcular() {
+  const cartelas = parseInt(document.getElementById('cfg-cartelas')?.value) || 1000
+  const preco    = parseFloat(document.getElementById('cfg-preco')?.value)  || 2
+  const total    = cartelas * preco
+
+  const pKuadra = parseInt(document.getElementById('sl-kuadra')?.value) || 10
+  const pKina   = parseInt(document.getElementById('sl-kina')?.value)   || 20
+  const pKeno   = parseInt(document.getElementById('sl-keno')?.value)   || 30
+  const pPonto  = parseInt(document.getElementById('sl-ponto')?.value)  || 20
+  const pOp     = 100 - pKuadra - pKina - pKeno - pPonto
+
+  const svOp = document.getElementById('sv-operador')
+  if (svOp) svOp.textContent = pOp + '%'
+
+  const alertEl = document.getElementById('margem-alert')
+  if (alertEl) {
+    if(pOp < 0) { alertEl.textContent='⚠️ Ultrapassa 100%!'; alertEl.style.color='var(--accent4)' }
+    else if(pOp < 10) { alertEl.textContent='⚠️ Margem baixa'; alertEl.style.color='var(--accent3)' }
+    else { alertEl.textContent='✅ Distribuição equilibrada'; alertEl.style.color='var(--accent2)' }
+  }
+
+  const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v }
+  set('pv-total',     fmt(total))
+  set('pv-kuadra',    fmt(total * pKuadra / 100))
+  set('pv-kina',      fmt(total * pKina   / 100))
+  set('pv-keno',      fmt(total * pKeno   / 100))
+  set('pv-ponto',     fmt(total * pPonto  / 100))
+  set('pv-operador',  fmt(total * Math.max(0,pOp) / 100))
+  set('pv-rtp',       (pKuadra+pKina+pKeno) + '%')
+
+  const vOp = total * Math.max(0,pOp) / 100
+  set('pv-dia',     fmt(vOp * 4))
+  set('proj-dia',   fmt(vOp * 4))
+  set('proj-mes',   fmt(vOp * 4 * 30))
+  set('proj-rede',  fmt(vOp * 4 * 30 * 10))
+
+  const bar = (id, w) => { const el=document.getElementById(id); if(el) el.style.width=w+'%' }
+  bar('seg-kuadra', pKuadra)
+  bar('seg-kina',   pKina)
+  bar('seg-keno',   pKeno)
+  bar('seg-ponto',  pPonto)
+  bar('seg-op',     Math.max(0,pOp))
+}
+
+// ── TABELA DE PONTOS ──────────────────────────────────────
+async function buildPontosTable() {
+  const { data } = await sb
+    .from('pontos')
+    .select('id, nome, cidade, comissao_pct, ativo')
+    .order('nome')
+
+  const tbody = document.getElementById('pontosTableBody')
+  if (!tbody || !data) return
+  tbody.innerHTML = ''
+
+  data.forEach(p => {
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)">${p.id.slice(0,8)}…</span></td>
+      <td><strong>${p.nome}</strong></td>
+      <td>${p.cidade}</td>
+      <td><span style="font-family:'JetBrains Mono',monospace">—</span></td>
+      <td><span style="color:var(--purple);font-weight:600">${p.comissao_pct}%</span></td>
+      <td>${p.ativo
+        ? '<span class="badge badge-green">Ativo</span>'
+        : '<span class="badge badge-red">Inativo</span>'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-xs btn-xs-success" onclick="abrirVendedor('${p.id}')">App Vendedor</button>
+        </div>
+      </td>
+    `
+    tbody.appendChild(tr)
+  })
+}
+
+function abrirVendedor(pontoId) {
+  window.open(`app-vendedor.html?ponto=${pontoId}`, '_blank')
+}
+
+// ── INIT ──────────────────────────────────────────────────
+carregarDashboard()
+buildPontosTable()
+recalcular()
+</script>
+</body>
+</html>

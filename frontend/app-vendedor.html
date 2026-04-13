@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bingo — App Vendedor v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#080f0a;--surface:#0f1a12;--surface2:#162019;--surface3:#1e2e22;
+  --border:#253328;--border2:#344a38;
+  --green:#00e676;--green2:#00c853;--green-dim:rgba(0,230,118,0.12);
+  --gold:#ffd740;--gold-dim:rgba(255,215,64,0.12);
+  --blue:#40c4ff;--red:#ff5252;--red-dim:rgba(255,82,82,0.12);
+  --orange:#ff9100;--orange-dim:rgba(255,145,0,0.12);
+  --purple:#b388ff;--text:#e8f5e9;--muted:#5a7a60;--muted2:#8aaa8e;
+  --radius:16px;--radius-sm:10px;--radius-xs:6px;
+}
+html,body{background:#040a06;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;}
+
+/* PHONE */
+.phone{width:390px;height:844px;background:var(--bg);border-radius:44px;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.08),0 40px 80px rgba(0,0,0,0.8),0 0 60px rgba(0,230,118,0.06);
+  display:flex;flex-direction:column;}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:0 0 20px 20px;z-index:10;}
+.status-bar{height:44px;padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.status-time{font-size:15px;font-weight:700;color:var(--text);}
+.status-icons{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);}
+.screen{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.page::-webkit-scrollbar{display:none;}
+.page.active{display:flex;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.page.active>*{animation:slideUp .25s ease both;}
+
+/* BOTTOM NAV */
+.bottom-nav{height:78px;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 0 16px;flex-shrink:0;z-index:20;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 0;transition:all .2s;}
+.nav-btn .ni{font-size:20px;transition:transform .2s;}
+.nav-btn .nl{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.3px;}
+.nav-btn.active .nl{color:var(--green);}
+.nav-btn.active .ni{transform:scale(1.15);}
+.nav-badge-dot{position:relative;}
+.nav-badge-dot::after{content:'';position:absolute;top:-2px;right:-4px;width:7px;height:7px;border-radius:50%;background:var(--orange);border:1.5px solid var(--bg);}
+
+/* SHARED */
+.page-header{padding:20px 20px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+.page-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted2);}
+.sec-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;}
+.sec-title{font-size:15px;font-weight:700;color:var(--text);}
+.sec-link{font-size:12px;color:var(--green);font-weight:600;cursor:pointer;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin:0 20px;}
+.card+.card{margin-top:10px;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.badge-green{background:var(--green-dim);color:var(--green);}
+.badge-gold{background:var(--gold-dim);color:var(--gold);}
+.badge-red{background:var(--red-dim);color:var(--red);}
+.badge-orange{background:var(--orange-dim);color:var(--orange);}
+.badge-blue{background:rgba(64,196,255,.12);color:var(--blue);}
+
+/* FORM */
+.form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;display:block;}
+.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px 14px;font-size:15px;font-weight:500;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;width:100%;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(--green);}
+.form-input::placeholder{color:var(--muted);}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:var(--radius-sm);padding:16px;width:100%;font-size:16px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;}
+.btn:active{transform:scale(.98);}
+.btn-green{background:linear-gradient(135deg,#00c853,#00e676);color:#000;box-shadow:0 8px 24px rgba(0,200,83,.3);}
+.btn-gold{background:linear-gradient(135deg,#f9a825,#ffd740);color:#000;box-shadow:0 8px 24px rgba(249,168,37,.3);}
+.btn-red{background:linear-gradient(135deg,#c62828,#ff5252);color:#fff;box-shadow:0 6px 20px rgba(198,40,40,.3);}
+.btn-ghost{background:var(--surface3);border:1px solid var(--border2);color:var(--muted2);padding:12px;font-size:14px;}
+.btn-sm{padding:10px 16px;font-size:13px;font-weight:700;border-radius:var(--radius-xs);}
+
+/* QTDE */
+.qtde-row{display:flex;align-items:center;gap:12px;}
+.qtde-btn{width:42px;height:42px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.qtde-btn:active{background:var(--green-dim);border-color:var(--green);}
+.qtde-num{font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--text);flex:1;text-align:center;}
+
+/* PAYMENT CHOOSER */
+.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pay-option{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;}
+.pay-option:active{transform:scale(.97);}
+.pay-option.selected-pix{border-color:var(--green);background:var(--green-dim);}
+.pay-option.selected-cash{border-color:var(--gold);background:var(--gold-dim);}
+.pay-option-ico{font-size:28px;margin-bottom:8px;}
+.pay-option-label{font-size:14px;font-weight:700;color:var(--text);}
+.pay-option-sub{font-size:11px;color:var(--muted2);margin-top:3px;}
+
+/* TOTAL BAR */
+.total-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin:0 20px;}
+.total-label{font-size:13px;color:var(--muted2);}
+.total-val{font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);}
+
+/* CARTELA PREVIEW */
+.cartela-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cartela-code{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--green);}
+.cartela-tag{font-size:10px;color:var(--muted2);background:var(--surface3);padding:3px 8px;border-radius:4px;}
+.cartela-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px;}
+.cn{background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:8px 4px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--text);}
+.cn.hit{background:var(--green-dim);border-color:rgba(0,230,118,.4);color:var(--green);}
+
+/* ── HOME ── */
+.sorteio-card{background:linear-gradient(135deg,#0d2b14,#0a2010);border:1px solid rgba(0,230,118,.25);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;}
+.sorteio-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(0,230,118,.1),transparent 70%);}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.3);border-radius:100px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:10px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.prizes-row{display:flex;gap:10px;}
+.prize-chip{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:8px 10px;text-align:center;}
+.prize-chip-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.prize-chip-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;}
+.qs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px;}
+.qs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;}
+.qs-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.qs-val{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.qs-sub{font-size:11px;color:var(--muted2);margin-top:3px;}
+
+/* DIVIDA ALERT no home */
+.divida-alert{margin:0 20px 16px;background:rgba(255,145,0,.08);border:1px solid rgba(255,145,0,.3);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.divida-alert-ico{font-size:24px;flex-shrink:0;}
+.divida-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:var(--orange);}
+.divida-lbl{font-size:12px;color:var(--muted2);margin-top:2px;}
+.divida-arrow{margin-left:auto;color:var(--muted);font-size:20px;}
+
+/* ── PIX PAGE ── */
+.pix-page{padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pix-amount{font-size:44px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);text-shadow:0 0 30px rgba(0,230,118,.3);}
+.pix-qr-wrap{background:#fff;border-radius:20px;padding:16px;box-shadow:0 0 40px rgba(0,230,118,.2);}
+.qr-svg{width:170px;height:170px;}
+.pix-key-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;width:100%;}
+.pix-key-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.pix-key-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);word-break:break-all;}
+.pix-timer-lbl{font-size:12px;color:var(--muted2);}
+.pix-timer-val{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--gold);}
+.pix-status{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(255,215,64,.08);border:1px solid rgba(255,215,64,.25);border-radius:var(--radius-xs);font-size:13px;color:var(--gold);font-weight:600;width:100%;}
+.pix-status.pago{background:var(--green-dim);border-color:rgba(0,230,118,.3);color:var(--green);}
+.btn-copy{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:12px 20px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+.btn-copy:active{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+
+/* ── CASH CONFIRMACAO ── */
+.cash-page{padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.cash-ico-wrap{width:100px;height:100px;border-radius:50%;background:var(--gold-dim);border:2px solid rgba(255,215,64,.3);display:flex;align-items:center;justify-content:center;font-size:48px;}
+.cash-title{font-size:24px;font-weight:800;color:var(--text);text-align:center;}
+.cash-sub{font-size:14px;color:var(--muted2);text-align:center;line-height:1.5;}
+.cash-amount{font-size:52px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);text-shadow:0 0 30px rgba(255,215,64,.3);}
+.cash-info-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;width:100%;}
+.cash-info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.cash-info-row:last-child{border-bottom:none;}
+.cash-info-lbl{font-size:13px;color:var(--muted2);}
+.cash-info-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.cash-status{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--gold-dim);border:1px solid rgba(255,215,64,.3);border-radius:var(--radius-xs);font-size:13px;color:var(--gold);font-weight:600;width:100%;}
+.cash-status.confirmado{background:var(--green-dim);border-color:rgba(0,230,118,.3);color:var(--green);animation:payFlash .4s ease;}
+@keyframes payFlash{0%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+/* ── DÍVIDA PAGE ── */
+.divida-hero{margin:20px;background:rgba(255,145,0,.06);border:1px solid rgba(255,145,0,.25);border-radius:var(--radius);padding:20px;text-align:center;}
+.divida-hero-val{font-size:44px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--orange);}
+.divida-hero-lbl{font-size:13px;color:var(--muted2);margin-top:4px;}
+.divida-hero-sub{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.divida-item{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.04);}
+.divida-item:last-child{border-bottom:none;}
+.divida-item-lbl{font-size:13px;color:var(--muted2);}
+.divida-item-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--orange);}
+.divida-pago{color:var(--green)!important;}
+.pagar-btn{margin:0 20px;background:linear-gradient(135deg,#e65100,#ff9100);border:none;border-radius:var(--radius-sm);padding:16px;width:calc(100% - 40px);font-size:16px;font-weight:800;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(255,145,0,.3);transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.pagar-btn:active{transform:scale(.98);}
+.cash-list{padding:0 20px;display:flex;flex-direction:column;gap:8px;}
+.cash-hist-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;}
+.chi-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.chi-name{font-size:14px;font-weight:700;color:var(--text);}
+.chi-detail{font-size:12px;color:var(--muted2);margin-top:2px;}
+.chi-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--gold);}
+
+/* BACK BTN */
+.btn-back{background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-xs);padding:9px 14px;font-size:13px;font-weight:600;color:var(--muted2);cursor:pointer;display:flex;align-items:center;gap:6px;align-self:flex-start;margin:16px 20px 0;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <div class="status-time" id="clock">20:14</div>
+    <div class="status-icons"><span>📶</span><span>🔋</span></div>
+  </div>
+
+  <div class="screen">
+
+  <!-- ══════════ HOME ══════════ -->
+  <div class="page active" id="page-home">
+    <div style="padding:16px 20px 14px;background:var(--surface);border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:13px;color:var(--muted2);">Olá, Tiao 👋</div>
+          <div style="font-size:20px;font-weight:800;color:var(--text);">Cor Bar do Tiao</div>
+        </div>
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--green),#00897b);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#000;">T</div>
+      </div>
+      <div class="sorteio-card">
+        <div class="live-pill"><div class="live-dot"></div>AO VIVO</div>
+        <div style="font-size:13px;color:var(--muted2);">Sorteio #2474</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:12px;">KENO em andamento</div>
+        <div class="prizes-row">
+          <div class="prize-chip"><div class="prize-chip-lbl">Kuadra</div><div class="prize-chip-val" style="color:var(--blue)">R$5k</div></div>
+          <div class="prize-chip"><div class="prize-chip-lbl">Kina</div><div class="prize-chip-val" style="color:var(--gold)">R$10k</div></div>
+          <div class="prize-chip"><div class="prize-chip-lbl">Keno</div><div class="prize-chip-val" style="color:var(--green)">R$20k</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTA DE DÍVIDA -->
+    <div style="height:12px;"></div>
+    <div class="divida-alert" onclick="goPage('divida')">
+      <div class="divida-alert-ico">⚠️</div>
+      <div>
+        <div class="divida-val" id="home-divida">R$148,00</div>
+        <div class="divida-lbl">em dívida · vence sexta-feira</div>
+      </div>
+      <div class="divida-arrow">›</div>
+    </div>
+
+    <div class="qs-grid">
+      <div class="qs-card"><div class="qs-label">Vendas Hoje</div><div class="qs-val" style="color:var(--green);">47</div><div class="qs-sub">cartelas</div></div>
+      <div class="qs-card"><div class="qs-label">Cash Hoje</div><div class="qs-val" style="color:var(--gold);">R$54</div><div class="qs-sub">27 cartelas</div></div>
+      <div class="qs-card"><div class="qs-label">PIX Hoje</div><div class="qs-val" style="color:var(--blue);">R$40</div><div class="qs-sub">20 cartelas</div></div>
+      <div class="qs-card"><div class="qs-label">Comissão</div><div class="qs-val" style="color:var(--purple);">R$18,80</div><div class="qs-sub">20% de R$94</div></div>
+    </div>
+
+    <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-green" onclick="goPage('vender')">🃏 Vender Nova Cartela</button>
+    </div>
+  </div>
+
+  <!-- ══════════ VENDER ══════════ -->
+  <div class="page" id="page-vender">
+    <div class="page-header">
+      <div class="page-title">Vender Cartela</div>
+      <div class="page-sub">Sorteio #2474 · 13/04 · 20:00</div>
+    </div>
+
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- CARTELA -->
+      <div class="card">
+        <div class="cartela-header">
+          <div class="cartela-code" id="vCartCode">#49856</div>
+          <div class="cartela-tag">Sorteio #2474</div>
+        </div>
+        <div class="cartela-grid" id="vCartelaGrid"></div>
+        <button class="btn btn-ghost" onclick="gerarCartela()" style="font-size:13px;padding:10px;">🔄 Nova cartela aleatória</button>
+      </div>
+
+      <!-- COMPRADOR -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label class="form-label">Nome do Comprador</label>
+          <input class="form-input" type="text" placeholder="Ex: João Silva" id="inp-nome">
+        </div>
+        <div>
+          <label class="form-label">Quantidade</label>
+          <div class="qtde-row">
+            <div class="qtde-btn" onclick="changeQtde(-1)">−</div>
+            <div class="qtde-num" id="qtdeNum">1</div>
+            <div class="qtde-btn" onclick="changeQtde(1)">+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMA DE PAGAMENTO -->
+      <div class="card">
+        <label class="form-label" style="margin-bottom:12px;">Forma de Pagamento</label>
+        <div class="pay-grid">
+          <div class="pay-option selected-pix" id="opt-pix" onclick="selectPay('pix')">
+            <div class="pay-option-ico">⚡</div>
+            <div class="pay-option-label">PIX</div>
+            <div class="pay-option-sub">QR Code na hora</div>
+          </div>
+          <div class="pay-option" id="opt-cash" onclick="selectPay('cash')">
+            <div class="pay-option-ico">💵</div>
+            <div class="pay-option-label">Dinheiro</div>
+            <div class="pay-option-sub">Confirmar recebido</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="total-bar">
+      <div class="total-label">Total</div>
+      <div class="total-val" id="totalVal">R$ 2,00</div>
+    </div>
+    <div style="padding:14px 20px 20px;">
+      <button class="btn btn-green" id="btn-cobrar" onclick="cobrar()">⚡ Gerar PIX</button>
+    </div>
+  </div>
+
+  <!-- ══════════ PIX ══════════ -->
+  <div class="page" id="page-pix">
+    <button class="btn-back" onclick="goPage('vender')">← Voltar</button>
+    <div class="pix-page">
+      <div style="text-align:center;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;">Aguardando PIX</div>
+        <div style="font-size:13px;color:var(--muted2);">Mostre o QR Code ao comprador</div>
+      </div>
+      <div class="pix-amount" id="pixAmount">R$ 2,00</div>
+      <div class="pix-qr-wrap">
+        <svg class="qr-svg" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="7" height="7" fill="#000"/><rect x="1" y="1" width="5" height="5" fill="#fff"/><rect x="2" y="2" width="3" height="3" fill="#000"/>
+          <rect x="14" y="0" width="7" height="7" fill="#000"/><rect x="15" y="1" width="5" height="5" fill="#fff"/><rect x="16" y="2" width="3" height="3" fill="#000"/>
+          <rect x="0" y="14" width="7" height="7" fill="#000"/><rect x="1" y="15" width="5" height="5" fill="#fff"/><rect x="2" y="16" width="3" height="3" fill="#000"/>
+          <rect x="8" y="0" width="1" height="1" fill="#000"/><rect x="10" y="0" width="2" height="1" fill="#000"/>
+          <rect x="8" y="2" width="2" height="1" fill="#000"/><rect x="11" y="2" width="1" height="1" fill="#000"/>
+          <rect x="8" y="4" width="1" height="2" fill="#000"/><rect x="10" y="4" width="2" height="1" fill="#000"/>
+          <rect x="9" y="6" width="3" height="1" fill="#000"/>
+          <rect x="0" y="8" width="2" height="1" fill="#000"/><rect x="4" y="8" width="1" height="2" fill="#000"/>
+          <rect x="6" y="8" width="2" height="1" fill="#000"/><rect x="9" y="8" width="1" height="3" fill="#000"/>
+          <rect x="11" y="8" width="2" height="2" fill="#000"/><rect x="14" y="8" width="3" height="1" fill="#000"/>
+          <rect x="18" y="8" width="3" height="2" fill="#000"/>
+          <rect x="0" y="10" width="3" height="1" fill="#000"/><rect x="5" y="10" width="2" height="1" fill="#000"/>
+          <rect x="13" y="10" width="2" height="1" fill="#000"/><rect x="16" y="10" width="2" height="2" fill="#000"/>
+          <rect x="0" y="12" width="1" height="2" fill="#000"/><rect x="3" y="12" width="2" height="1" fill="#000"/>
+          <rect x="7" y="12" width="3" height="2" fill="#000"/><rect x="11" y="12" width="1" height="3" fill="#000"/>
+          <rect x="13" y="12" width="3" height="1" fill="#000"/><rect x="17" y="12" width="4" height="1" fill="#000"/>
+          <rect x="8" y="14" width="2" height="1" fill="#000"/><rect x="12" y="14" width="1" height="2" fill="#000"/>
+          <rect x="14" y="14" width="2" height="3" fill="#000"/><rect x="17" y="14" width="1" height="2" fill="#000"/>
+          <rect x="19" y="14" width="2" height="3" fill="#000"/>
+          <rect x="8" y="16" width="3" height="2" fill="#000"/><rect x="13" y="16" width="1" height="2" fill="#000"/>
+          <rect x="16" y="18" width="3" height="2" fill="#000"/>
+        </svg>
+      </div>
+      <div class="pix-key-box">
+        <div class="pix-key-lbl">Chave PIX</div>
+        <div class="pix-key-val">49.852.001/0001-23 · Cor Bar do Tiao LTDA</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="pix-timer-lbl">Expira em</div>
+        <div class="pix-timer-val" id="pixTimer">14:58</div>
+      </div>
+      <div class="pix-status" id="pixStatus">⏳ Aguardando confirmação...</div>
+      <button class="btn-copy" onclick="copiarPix()">📋 Copiar código PIX</button>
+      <button class="btn btn-green" onclick="simularPIX()" style="font-size:14px;padding:14px;">✅ Simular PIX Recebido</button>
+    </div>
+  </div>
+
+  <!-- ══════════ CASH CONFIRMAÇÃO ══════════ -->
+  <div class="page" id="page-cash">
+    <button class="btn-back" onclick="goPage('vender')">← Voltar</button>
+    <div class="cash-page">
+
+      <div class="cash-ico-wrap">💵</div>
+      <div class="cash-title">Confirmar Recebimento</div>
+      <div class="cash-sub">Você recebeu o dinheiro em mãos?<br>A cartela será ativada imediatamente.</div>
+
+      <div class="cash-amount" id="cashAmount">R$ 2,00</div>
+
+      <div class="cash-info-box">
+        <div class="cash-info-row">
+          <div class="cash-info-lbl">Comprador</div>
+          <div class="cash-info-val" id="cashNome">—</div>
+        </div>
+        <div class="cash-info-row">
+          <div class="cash-info-lbl">Cartela</div>
+          <div class="cash-info-val" id="cashCartela">#49856</div>
+        </div>
+        <div class="cash-info-row">
+          <div class="cash-info-lbl">Sorteio</div>
+          <div class="cash-info-val">#2474</div>
+        </div>
+        <div class="cash-info-row">
+          <div class="cash-info-lbl">Sua comissão (20%)</div>
+          <div class="cash-info-val" style="color:var(--green);" id="cashComissao">R$0,40</div>
+        </div>
+        <div class="cash-info-row">
+          <div class="cash-info-lbl">Dívida gerada</div>
+          <div class="cash-info-val" style="color:var(--orange);" id="cashDivida">R$1,60</div>
+        </div>
+      </div>
+
+      <div class="cash-status" id="cashStatus">
+        💡 Ao confirmar, a dívida será registrada no sistema
+      </div>
+
+      <button class="btn btn-gold" id="btnConfirmCash" onclick="confirmarCash()">
+        💵 Sim, recebi em dinheiro
+      </button>
+
+      <button class="btn btn-ghost" onclick="goPage('vender')">Cancelar</button>
+
+    </div>
+  </div>
+
+  <!-- ══════════ DÍVIDA ══════════ -->
+  <div class="page" id="page-divida">
+    <div class="page-header">
+      <div class="page-title">Minha Dívida</div>
+      <div class="page-sub">Vendas em cash a repassar</div>
+    </div>
+
+    <div class="divida-hero">
+      <div class="divida-hero-val" id="divida-total">R$148,00</div>
+      <div class="divida-hero-lbl">Total em aberto · vence 18/04 (sexta)</div>
+      <div class="divida-hero-sub">Este valor é referente às vendas em dinheiro.<br>Repasse via PIX até a data de vencimento.</div>
+    </div>
+
+    <div class="sec-header"><div class="sec-title">Detalhamento por Dia</div></div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin:0 20px 16px;overflow:hidden;">
+      <div class="divida-item"><div class="divida-item-lbl">13/04 (hoje)</div><div class="divida-item-val" id="div-hoje">R$54,40</div></div>
+      <div class="divida-item"><div class="divida-item-lbl">12/04</div><div class="divida-item-val">R$38,40</div></div>
+      <div class="divida-item"><div class="divida-item-lbl">11/04</div><div class="divida-item-val">R$33,60</div></div>
+      <div class="divida-item"><div class="divida-item-lbl">10/04 · Pago ✓</div><div class="divida-item-val divida-pago">R$22,00</div></div>
+    </div>
+
+    <div class="sec-header"><div class="sec-title">Vendas Cash de Hoje</div></div>
+
+    <div class="cash-list" id="cashList">
+      <!-- gerado via JS -->
+    </div>
+
+    <div style="height:16px;"></div>
+
+    <button class="pagar-btn" onclick="pagarDivida()">
+      💸 Pagar R$148,00 via PIX agora
+    </button>
+
+    <div style="height:20px;"></div>
+
+  </div>
+
+  <!-- ══════════ COMISSÃO ══════════ -->
+  <div class="page" id="page-com">
+    <div class="page-header">
+      <div class="page-title">Minha Comissão</div>
+      <div class="page-sub">Cor Bar do Tiao · Rio Pomba</div>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="background:linear-gradient(135deg,#0d2b14,#0a2010);border:1px solid rgba(0,230,118,.25);border-radius:var(--radius);padding:20px;text-align:center;">
+        <div style="font-size:12px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Saldo para Saque</div>
+        <div style="font-size:44px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);">R$18,80</div>
+        <div style="font-size:12px;color:var(--muted2);margin-top:4px;">20% sobre R$94 vendidos hoje</div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Resumo — 13/04</div>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span style="font-size:13px;color:var(--muted2);">Vendas PIX</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--blue);">20 × R$2 = R$40</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span style="font-size:13px;color:var(--muted2);">Vendas Cash</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--gold);">27 × R$2 = R$54</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;">
+            <span style="font-size:13px;color:var(--muted2);">Sua comissão (20%)</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green);">R$18,80</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="alert('✅ Saque de R$18,80 solicitado!\nPIX enviado em até 2h.')">💸 Sacar R$18,80 via PIX</button>
+    </div>
+  </div>
+
+  </div><!-- /screen -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-btn active" id="nav-home" onclick="goPage('home')">
+      <span class="ni">🏠</span><span class="nl">Início</span>
+    </div>
+    <div class="nav-btn" id="nav-vender" onclick="goPage('vender')">
+      <span class="ni">🃏</span><span class="nl">Vender</span>
+    </div>
+    <div class="nav-btn nav-badge-dot" id="nav-divida" onclick="goPage('divida')">
+      <span class="ni">💵</span><span class="nl">Dívida</span>
+    </div>
+    <div class="nav-btn" id="nav-com" onclick="goPage('com')">
+      <span class="ni">💰</span><span class="nl">Comissão</span>
+    </div>
+    <div class="nav-btn" id="nav-hist" onclick="alert('Histórico em breve!')">
+      <span class="ni">📋</span><span class="nl">Histórico</span>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://imvfraakhmtjfdclqfar.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdmZyYWFraG10amZkY2xxZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODE5NzMsImV4cCI6MjA5MTY1Nzk3M30.OmZ2urzWq9p7W6q5n2im6TfrOdGMWHAII3PTWQx4Q44'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+// Ponto_id via URL: ?ponto=<uuid>
+const params  = new URLSearchParams(location.search)
+const PONTO_ID = params.get('ponto') || null
+
+// ── ESTADO ───────────────────────────────────────────────
+let qtde=1, payMode='cash'
+let sorteioAtivo = null   // objeto do sorteio atual
+let cartelaAtual = null   // cartela selecionada para venda
+let divida=0, cashHoje=0
+let cashItems=[]
+let precoPorCartela = 2.00
+
+// ── CLOCK ──────────────────────────────────────────────
+function updateClock(){
+  const n=new Date()
+  document.getElementById('clock').textContent=
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')
+}
+updateClock(); setInterval(updateClock,10000)
+
+// ── NAV ────────────────────────────────────────────────
+const PAGES=['home','vender','pix','cash','divida','com','hist']
+function goPage(id){
+  PAGES.forEach(p=>{
+    const pg=document.getElementById('page-'+p)
+    if(pg)pg.classList.remove('active')
+    const nav=document.getElementById('nav-'+p)
+    if(nav)nav.classList.remove('active')
+  })
+  const pg=document.getElementById('page-'+id)
+  if(pg)pg.classList.add('active')
+  const nav=document.getElementById('nav-'+id)
+  if(nav)nav.classList.add('active')
+}
+
+// ── INIT ───────────────────────────────────────────────
+async function init() {
+  await carregarSorteioAtivo()
+  await carregarDivida()
+  renderCashList()
+  await proximaCartela()
+}
+
+// ── CARREGAR SORTEIO ATIVO ─────────────────────────────
+async function carregarSorteioAtivo() {
+  const { data } = await sb
+    .from('sorteios')
+    .select('id, numero, preco_cartela, status, inicio_em')
+    .in('status', ['ativo', 'agendado'])
+    .order('inicio_em', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (!data) return
+  sorteioAtivo = data
+  precoPorCartela = data.preco_cartela || 2.00
+
+  // Atualiza UI
+  const ref = `#${data.numero}`
+  document.querySelectorAll('[id$="sorteioRef"]').forEach(el => el.textContent = ref)
+  document.getElementById('totalVal').textContent =
+    'R$ ' + (qtde * precoPorCartela).toFixed(2).replace('.',',')
+}
+
+// ── CARREGAR DÍVIDA DO PONTO ───────────────────────────
+async function carregarDivida() {
+  if (!PONTO_ID) return
+  const { data } = await sb
+    .from('pontos')
+    .select('divida_total, nome')
+    .eq('id', PONTO_ID)
+    .single()
+
+  if (!data) return
+  divida = data.divida_total || 0
+  document.getElementById('divida-total').textContent = fmt(divida)
+  document.getElementById('home-divida').textContent  = fmt(divida)
+  document.getElementById('div-hoje').textContent     = fmt(cashHoje)
+}
+
+// ── PRÓXIMA CARTELA DISPONÍVEL ─────────────────────────
+async function proximaCartela() {
+  if (!sorteioAtivo) { gerarCartelaLocal(); return }
+
+  const query = sb
+    .from('cartelas')
+    .select('id, codigo, numeros')
+    .eq('sorteio_id', sorteioAtivo.id)
+    .eq('status', 'disponivel')
+    .limit(1)
+
+  if (PONTO_ID) query.eq('ponto_id', PONTO_ID)
+
+  const { data } = await query.single()
+
+  if (!data) { alert('Nenhuma cartela disponível para este sorteio.'); return }
+
+  cartelaAtual = data
+  mostrarCartelaUI(data)
+}
+
+function gerarCartelaLocal() {
+  // Fallback sem banco
+  const nums=[]
+  while(nums.length<15){const n=Math.floor(Math.random()*90)+1;if(!nums.includes(n))nums.push(n)}
+  nums.sort((a,b)=>a-b)
+  cartelaAtual = { id: null, codigo: 0, numeros: nums }
+  mostrarCartelaUI(cartelaAtual)
+}
+
+function mostrarCartelaUI(c) {
+  document.getElementById('vCartCode').textContent = '#'+c.codigo
+  const g=document.getElementById('vCartelaGrid')
+  g.innerHTML=''
+  c.numeros.forEach(n=>{const d=document.createElement('div');d.className='cn';d.textContent=n;g.appendChild(d)})
+}
+
+// ── QTDE ───────────────────────────────────────────────
+function changeQtde(d){
+  qtde=Math.max(1,Math.min(10,qtde+d))
+  document.getElementById('qtdeNum').textContent=qtde
+  document.getElementById('totalVal').textContent=
+    'R$ '+(qtde*precoPorCartela).toFixed(2).replace('.',',')
+  atualizarBotaoCobrar()
+}
+
+// ── PAGAMENTO ──────────────────────────────────────────
+function selectPay(m){
+  payMode=m
+  document.getElementById('opt-pix').className='pay-option'+(m==='pix'?' selected-pix':'')
+  document.getElementById('opt-cash').className='pay-option'+(m==='cash'?' selected-cash':'')
+  atualizarBotaoCobrar()
+}
+
+function atualizarBotaoCobrar(){
+  const btn=document.getElementById('btn-cobrar')
+  if(payMode==='pix'){btn.className='btn btn-green';btn.textContent='⚡ Gerar PIX'}
+  else{btn.className='btn btn-gold';btn.textContent='💵 Confirmar Cash'}
+}
+
+function cobrar(){
+  if(payMode==='pix') abrirPIX()
+  else abrirCash()
+}
+
+// ── PIX ────────────────────────────────────────────────
+let pixInterval=null, pixSecs=900, pixPago=false
+function abrirPIX(){
+  goPage('pix')
+  document.getElementById('pixAmount').textContent='R$ '+(qtde*precoPorCartela).toFixed(2).replace('.',',')
+  document.getElementById('pixStatus').className='pix-status'
+  document.getElementById('pixStatus').textContent='⏳ Aguardando confirmação...'
+  pixPago=false; pixSecs=900
+  clearInterval(pixInterval)
+  pixInterval=setInterval(()=>{
+    if(pixPago){clearInterval(pixInterval);return}
+    pixSecs--
+    const m=Math.floor(pixSecs/60),s=pixSecs%60
+    document.getElementById('pixTimer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')
+    if(pixSecs<=0){clearInterval(pixInterval);document.getElementById('pixStatus').textContent='❌ PIX expirado.'}
+  },1000)
+}
+
+async function simularPIX(){
+  if (!cartelaAtual) return
+  pixPago=true; clearInterval(pixInterval)
+  const nome = document.getElementById('inp-nome').value || 'Cliente'
+  const total = qtde * precoPorCartela
+
+  await ativarCartela(cartelaAtual.id, nome, 'pix', total)
+
+  document.getElementById('pixTimer').textContent='00:00'
+  const st=document.getElementById('pixStatus')
+  st.className='pix-status pago'
+  st.innerHTML='✅ Pago! Cartela #'+cartelaAtual.codigo+' ativada.'
+  adicionarVenda({nome,cartela:'#'+cartelaAtual.codigo,valor:fmt(total),tipo:'pix',pago:true})
+  setTimeout(async()=>{goPage('home');resetForm();await proximaCartela()},2200)
+}
+
+function copiarPix(){
+  alert('✅ Código PIX copiado!')
+}
+
+// ── CASH ───────────────────────────────────────────────
+function abrirCash(){
+  const total=qtde*precoPorCartela
+  const nome=document.getElementById('inp-nome').value||'Cliente'
+  const comissaoPct = 20
+  const comissao = total * comissaoPct / 100
+  const devePagar = total - comissao
+  document.getElementById('cashAmount').textContent='R$ '+total.toFixed(2).replace('.',',')
+  document.getElementById('cashNome').textContent=nome
+  document.getElementById('cashCartela').textContent='#'+(cartelaAtual?.codigo||'—')
+  document.getElementById('cashComissao').textContent='R$'+comissao.toFixed(2).replace('.',',')
+  document.getElementById('cashDivida').textContent='R$'+devePagar.toFixed(2).replace('.',',')
+  document.getElementById('cashStatus').className='cash-status'
+  document.getElementById('cashStatus').textContent='💡 Ao confirmar, a dívida será registrada no sistema'
+  document.getElementById('btnConfirmCash').disabled=false
+  document.getElementById('btnConfirmCash').textContent='💵 Sim, recebi em dinheiro'
+  goPage('cash')
+}
+
+async function confirmarCash(){
+  if (!cartelaAtual) return
+  const total=qtde*precoPorCartela
+  const nome=document.getElementById('inp-nome').value||'Cliente'
+  const novaDiv=total*0.8
+
+  const ok = await ativarCartela(cartelaAtual.id, nome, 'cash', total)
+  if (!ok) { alert('Erro ao registrar venda. Tente novamente.'); return }
+
+  divida+=novaDiv; cashHoje+=novaDiv
+  document.getElementById('divida-total').textContent=fmt(divida)
+  document.getElementById('div-hoje').textContent=fmt(cashHoje)
+  document.getElementById('home-divida').textContent=fmt(divida)
+
+  const st=document.getElementById('cashStatus')
+  st.className='cash-status confirmado'
+  st.innerHTML='✅ Cartela #'+cartelaAtual.codigo+' ativada! Dívida +'+fmt(novaDiv)
+  document.getElementById('btnConfirmCash').disabled=true
+  document.getElementById('btnConfirmCash').textContent='✅ Confirmado'
+
+  adicionarVenda({nome,cartela:'#'+cartelaAtual.codigo,valor:fmt(total),tipo:'cash',pago:false})
+  adicionarCashHoje({nome,cartela:'#'+cartelaAtual.codigo,valor:fmt(total),divida:fmt(novaDiv)})
+
+  setTimeout(async()=>{goPage('home');resetForm();await proximaCartela()},2000)
+}
+
+// ── ATIVAR CARTELA NO BANCO ────────────────────────────
+async function ativarCartela(cartelaId, nome, tipoPagamento, valorPago) {
+  if (!cartelaId) return true // fallback sem banco
+
+  const { error } = await sb
+    .from('cartelas')
+    .update({
+      status:          'paga',
+      tipo_pagamento:  tipoPagamento,
+      comprador_nome:  nome,
+      valor_pago:      valorPago,
+      pago_em:         new Date().toISOString()
+    })
+    .eq('id', cartelaId)
+
+  if (error) { console.error('Erro ao ativar cartela:', error.message); return false }
+
+  // Registra transação financeira
+  await sb.from('transacoes').insert({
+    tipo:       tipoPagamento === 'pix' ? 'venda_pix' : 'venda_cash',
+    sorteio_id: sorteioAtivo?.id,
+    cartela_id: cartelaId,
+    ponto_id:   PONTO_ID,
+    valor:      valorPago,
+    descricao:  `Venda ${tipoPagamento.toUpperCase()} · ${nome}`
+  })
+
+  return true
+}
+
+// ── HISTÓRICO ──────────────────────────────────────────
+let vendas=[]
+function adicionarVenda(v){
+  v.hora=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+  vendas.unshift(v)
+}
+
+let cashItems=[]
+function adicionarCashHoje(item){
+  cashItems.unshift(item)
+  renderCashList()
+}
+
+function renderCashList(){
+  const c=document.getElementById('cashList')
+  if(!c) return
+  c.innerHTML=''
+  if(cashItems.length===0){
+    c.innerHTML='<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px;">Nenhuma venda cash hoje.</div>'
+    return
+  }
+  cashItems.forEach(it=>{
+    const d=document.createElement('div')
+    d.className='cash-hist-item'
+    d.innerHTML=`
+      <div class="chi-row1">
+        <span class="badge badge-gold">💵 CASH</span>
+        <span style="font-size:11px;color:var(--muted);">hoje</span>
+      </div>
+      <div class="chi-name">${it.nome}</div>
+      <div class="chi-detail">${it.cartela} · Sorteio ativo</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span style="font-size:12px;color:var(--muted2);">Dívida: <span style="color:var(--orange);font-weight:700;">${it.divida}</span></span>
+        <span class="chi-val">${it.valor}</span>
+      </div>`
+    c.appendChild(d)
+  })
+}
+
+// ── PAGAR DÍVIDA ───────────────────────────────────────
+function pagarDivida(){
+  alert('✅ Entre em contato com o operador para registrar o pagamento.')
+}
+
+// ── UTILITÁRIOS ────────────────────────────────────────
+function fmt(v){
+  return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2})
+}
+
+function resetForm(){
+  qtde=1
+  document.getElementById('qtdeNum').textContent='1'
+  document.getElementById('totalVal').textContent='R$ '+precoPorCartela.toFixed(2).replace('.',',')
+  document.getElementById('inp-nome').value=''
+  selectPay('cash')
+}
+
+// ── START ──────────────────────────────────────────────
+init()
+</script>
+</body>
+</html>

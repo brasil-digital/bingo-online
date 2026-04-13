@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo Online — Display TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #050a18;
+  --navy: #071228;
+  --panel: #0b1a35;
+  --border: #1a3060;
+  --gold: #f5c842;
+  --gold2: #e8a020;
+  --green: #00e87a;
+  --red: #ff3b5c;
+  --blue: #4ab0ff;
+  --white: #eef4ff;
+  --muted: #5a7aaa;
+  --radius: 10px;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* BACKGROUND */
+.bg-layer {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(74,176,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 10% 90%, rgba(245,200,66,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 30% 30% at 90% 80%, rgba(0,232,122,0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* GRID LAYOUT */
+.screen {
+  position: relative;
+  width: 100vw; height: 100vh;
+  display: grid;
+  grid-template-rows: 64px 1fr 120px;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 8px;
+  padding: 8px;
+  z-index: 1;
+}
+
+/* ── HEADER ── */
+.header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 20px;
+}
+
+.header-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(245,200,66,0.5);
+}
+
+.header-logo span { color: var(--white); }
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.header-sorteio {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.header-sorteio strong {
+  color: var(--white);
+  font-size: 15px;
+}
+
+.header-prize {
+  display: flex;
+  gap: 20px;
+}
+
+.prize-item {
+  text-align: center;
+}
+
+.prize-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.prize-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+.prize-value.kuadra { color: var(--blue); }
+.prize-value.kina { color: var(--gold); }
+.prize-value.keno { color: var(--green); }
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,232,122,0.1);
+  border: 1px solid rgba(0,232,122,0.3);
+  border-radius: 100px;
+  padding: 4px 14px;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+/* ── LEFT PANEL — PONTOS ── */
+.panel-left {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-title {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-title .count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.pontos-list {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ponto-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 12px;
+  transition: background 0.3s;
+}
+
+.ponto-row:hover { background: rgba(255,255,255,0.03); }
+
+.ponto-row.winner {
+  background: rgba(245,200,66,0.12);
+  border-left: 3px solid var(--gold);
+  animation: winnerPulse 0.6s ease;
+}
+
+@keyframes winnerPulse {
+  0% { background: rgba(245,200,66,0.4); }
+  100% { background: rgba(245,200,66,0.12); }
+}
+
+.ponto-row.winner-keno {
+  background: rgba(0,232,122,0.15);
+  border-left: 3px solid var(--green);
+}
+
+.ponto-name {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.ponto-id {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.ponto-tags {
+  display: flex;
+  gap: 3px;
+}
+
+.ponto-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.tag-su { background: rgba(74,176,255,0.2); color: var(--blue); }
+.tag-ce { background: rgba(245,200,66,0.2); color: var(--gold); }
+.tag-in { background: rgba(0,232,122,0.2); color: var(--green); }
+.tag-mg { background: rgba(160,100,255,0.2); color: #c088ff; }
+
+/* ── CENTER — MAIN ── */
+.panel-center {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* BOLA ATUAL */
+.bola-atual-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bola-atual-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(74,176,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.bola-count-info {
+  text-align: center;
+}
+
+.bolas-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.bolas-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--white);
+}
+
+.bolas-total {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* A GRANDE BOLA */
+.bola-grande-wrap {
+  position: relative;
+}
+
+.bola-grande {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow:
+    0 0 40px rgba(74,176,255,0.4),
+    0 0 80px rgba(74,176,255,0.15),
+    inset 0 2px 8px rgba(255,255,255,0.3);
+  background: radial-gradient(circle at 35% 30%, #5ec8ff, #1478d4 40%, #0a3a7a 80%);
+  animation: bolaEntrada 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bolaEntrada {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.bola-grande .numero {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  z-index: 1;
+}
+
+.bola-grande::after {
+  content: '';
+  position: absolute;
+  top: 12%; left: 20%;
+  width: 35%; height: 25%;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  transform: rotate(-30deg);
+  filter: blur(4px);
+}
+
+/* ÚLTIMAS BOLAS */
+.ultimas-wrap {
+  text-align: center;
+}
+
+.ultimas-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.ultimas-bolas {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.bola-mini {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.bola-mini.c1 { background: radial-gradient(circle at 35% 30%, #ffb840, #e07010 40%, #7a3a00 80%); }
+.bola-mini.c2 { background: radial-gradient(circle at 35% 30%, #5ec8ff, #1478d4 40%, #0a3a7a 80%); }
+.bola-mini.c3 { background: radial-gradient(circle at 35% 30%, #a0e060, #40a020 40%, #1a5000 80%); }
+.bola-mini.c4 { background: radial-gradient(circle at 35% 30%, #ff7090, #d02050 40%, #6a0020 80%); }
+.bola-mini.c5 { background: radial-gradient(circle at 35% 30%, #c080ff, #6020d0 40%, #2a0060 80%); }
+.bola-mini.c6 { background: radial-gradient(circle at 35% 30%, #ffb840, #e07010 40%, #7a3a00 80%); }
+
+/* GRADE DE NÚMEROS */
+.grade-wrap {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.grade-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.grade-legenda {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legenda-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.legenda-dot.sorteada { background: var(--gold); }
+.legenda-dot.nova { background: var(--green); }
+.legenda-dot.pendente { background: var(--border); }
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 3px;
+  flex: 1;
+  align-content: center;
+}
+
+.num-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.3s ease;
+}
+
+.num-cell.sorteada {
+  background: rgba(245,200,66,0.15);
+  color: var(--gold);
+  border-color: rgba(245,200,66,0.3);
+  text-shadow: 0 0 8px rgba(245,200,66,0.5);
+}
+
+.num-cell.nova {
+  background: rgba(0,232,122,0.25);
+  color: var(--green);
+  border-color: rgba(0,232,122,0.5);
+  box-shadow: 0 0 12px rgba(0,232,122,0.4);
+  text-shadow: 0 0 8px rgba(0,232,122,0.8);
+  animation: novaEntrada 0.4s ease;
+}
+
+@keyframes novaEntrada {
+  0% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+/* ── RIGHT PANEL — CARTELAS ── */
+.panel-right {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cartelas-list {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cartela-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  transition: all 0.3s;
+}
+
+.cartela-card.destaque {
+  background: rgba(245,200,66,0.08);
+  border-color: rgba(245,200,66,0.4);
+  box-shadow: 0 0 12px rgba(245,200,66,0.2);
+}
+
+.cartela-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.cartela-id {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.cartela-ponto {
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.cartela-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+}
+
+.cartela-num {
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  text-align: center;
+  padding: 2px 0;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.cartela-num.hit {
+  background: rgba(245,200,66,0.2);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.cartela-num.hit-new {
+  background: rgba(0,232,122,0.25);
+  color: var(--green);
+  animation: hitFlash 0.4s ease;
+}
+
+@keyframes hitFlash {
+  0% { background: rgba(0,232,122,0.7); transform: scale(1.2); }
+  100% { background: rgba(0,232,122,0.25); transform: scale(1); }
+}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  grid-column: 1 / -1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+
+.bottom-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  height: 100%;
+  border-right: 1px solid var(--border);
+}
+
+.bottom-section:last-child { border-right: none; flex: 1; }
+
+.bottom-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bottom-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.bottom-val.kuadra { color: var(--blue); }
+.bottom-val.kina { color: var(--gold); }
+.bottom-val.keno { color: var(--green); }
+
+.acumulado-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acumulado-bar-wrap {
+  width: 140px;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.acumulado-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold2), var(--gold));
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+
+.acumulado-text {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.bottom-doacao {
+  text-align: center;
+}
+
+/* WINNER OVERLAY */
+.winner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,10,24,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.winner-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.winner-box {
+  background: var(--panel);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 48px 64px;
+  text-align: center;
+  box-shadow:
+    0 0 80px rgba(245,200,66,0.3),
+    0 0 160px rgba(245,200,66,0.1);
+  animation: winnerBox 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes winnerBox {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.winner-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 64px;
+  letter-spacing: 8px;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(245,200,66,0.6);
+  margin-bottom: 8px;
+}
+
+.winner-tipo {
+  font-size: 20px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.winner-ponto {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 3px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.winner-cartela {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.winner-premio {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px;
+  letter-spacing: 2px;
+  color: var(--green);
+  text-shadow: 0 0 30px rgba(0,232,122,0.5);
+}
+
+/* CONFETTI */
+.confetti-wrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 12px;
+  opacity: 0;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* PRÓXIMO SORTEIO */
+.proximo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 24px;
+}
+
+.proximo-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.proximo-timer {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--red);
+  min-width: 60px;
+  text-align: center;
+}
+
+/* TICKER */
+.ticker-wrap {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.ticker-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ticker-track {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.ticker-inner {
+  display: flex;
+  gap: 48px;
+  animation: tickerScroll 30s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticker-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+/* WATERMARK */
+.watermark {
+  position: fixed;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* RESPONSIVE for TV */
+@media (max-width: 1200px) {
+  .screen {
+    grid-template-columns: 220px 1fr 240px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="watermark">BINGO ONLINE · SORTEIO AO VIVO</div>
+
+<!-- CONFETTI -->
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<!-- WINNER OVERLAY -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-title">🎉 GANHADOR!</div>
+    <div class="winner-tipo" id="winnerTipo">KENO</div>
+    <div class="winner-ponto" id="winnerPonto">BAR DO MARCOS</div>
+    <div class="winner-cartela" id="winnerCartela">Cartela #481020 · UBA</div>
+    <div class="winner-premio" id="winnerPremio">R$ 20.000,00</div>
+  </div>
+</div>
+
+<div class="screen">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">BINGO <span>ON</span>LINE</div>
+
+    <div class="header-info">
+      <div class="header-sorteio">
+        SORTEIO <strong id="sorteioNum">#2474</strong>
+        &nbsp;·&nbsp;
+        <span id="sorteioData">13/04 · 20:00</span>
+      </div>
+
+      <div class="header-prize">
+        <div class="prize-item">
+          <div class="prize-label">Kuadra</div>
+          <div class="prize-value kuadra">R$5.000</div>
+        </div>
+        <div class="prize-item">
+          <div class="prize-label">Kina</div>
+          <div class="prize-value kina">R$10.000</div>
+        </div>
+        <div class="prize-item">
+          <div class="prize-label">Keno</div>
+          <div class="prize-value keno">R$20.000</div>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <div class="status-text" id="statusText">AO VIVO</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEFT: PONTOS -->
+  <div class="panel-left">
+    <div class="panel-title">
+      Pontos Participantes
+      <span class="count" id="pontosCount">24</span>
+    </div>
+    <div class="pontos-list" id="pontosList"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="panel-center">
+
+    <!-- BOLA ATUAL -->
+    <div class="bola-atual-wrap">
+      <div class="bola-count-info">
+        <div class="bolas-label">Bolas Sorteadas</div>
+        <div class="bolas-num" id="bolaCount">00</div>
+        <div class="bolas-total">de 90</div>
+      </div>
+
+      <div class="bola-grande-wrap">
+        <div class="bola-grande" id="bolaGrande">
+          <span class="numero" id="bolaNumero">—</span>
+        </div>
+      </div>
+
+      <div class="ultimas-wrap">
+        <div class="ultimas-label">Últimas Bolas</div>
+        <div class="ultimas-bolas" id="ultimasBolas">
+          <div class="bola-mini c1" style="opacity:0.2">—</div>
+          <div class="bola-mini c2" style="opacity:0.2">—</div>
+          <div class="bola-mini c3" style="opacity:0.2">—</div>
+          <div class="bola-mini c4" style="opacity:0.2">—</div>
+          <div class="bola-mini c5" style="opacity:0.2">—</div>
+          <div class="bola-mini c6" style="opacity:0.2">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRADE 1-90 -->
+    <div class="grade-wrap">
+      <div class="grade-header">
+        <div class="grade-title">Grade de Números · 1 a 90</div>
+        <div class="grade-legenda">
+          <div class="legenda-item"><div class="legenda-dot nova"></div> Atual</div>
+          <div class="legenda-item"><div class="legenda-dot sorteada"></div> Sorteadas</div>
+          <div class="legenda-item"><div class="legenda-dot pendente"></div> Pendentes</div>
+        </div>
+      </div>
+      <div class="grade" id="grade"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: CARTELAS EM DESTAQUE -->
+  <div class="panel-right">
+    <div class="panel-title">
+      Cartelas em Destaque
+      <span class="count">TOP 5</span>
+    </div>
+    <div class="cartelas-list" id="cartelasList"></div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <div class="bottom-section">
+      <div>
+        <div class="bottom-label">Kuadra</div>
+        <div class="bottom-val kuadra">R$ 5.000</div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div>
+        <div class="bottom-label">Kina</div>
+        <div class="bottom-val kina">R$ 10.000</div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div>
+        <div class="bottom-label">Keno</div>
+        <div class="bottom-val keno">R$ 20.000</div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div class="acumulado-info">
+        <div class="bottom-label">Acumulado até <span id="acumBola" style="color:var(--gold)">35</span> bolas</div>
+        <div class="acumulado-bar-wrap">
+          <div class="acumulado-bar" id="acumBar" style="width:0%"></div>
+        </div>
+        <div class="acumulado-text">R$ <span id="acumVal">150,00</span></div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div class="bottom-doacao">
+        <div class="bottom-label">Doação</div>
+        <div class="bottom-val" style="color:var(--white); font-size:22px">R$ 2,00</div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div class="proximo-wrap">
+        <div class="proximo-label">Próximo</div>
+        <div class="proximo-timer" id="proximoTimer">—</div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div class="ticker-wrap">
+        <div class="ticker-label">Últimos Ganhadores</div>
+        <div class="ticker-track">
+          <div class="ticker-inner" id="tickerInner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ─── CONFIG SUPABASE ──────────────────────────────────
+const SUPABASE_URL  = 'https://imvfraakhmtjfdclqfar.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdmZyYWFraG10amZkY2xxZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODE5NzMsImV4cCI6MjA5MTY1Nzk3M30.OmZ2urzWq9p7W6q5n2im6TfrOdGMWHAII3PTWQx4Q44'
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+let SORTEIO_ID = null
+
+// ─── ESTADO ───────────────────────────────────────────
+let sorteadas        = []
+let acumBola         = 35
+let cartelasDB       = []
+let proximoCountdown = 180
+
+// REMOVIDO — dados simulados substituídos pelo banco
+const PONTOS = [
+  { id: 481035, nome: 'BAR DO MARCOS', cidade: 'UBA', tag: 'MG' },
+  { id: 484029, nome: 'BAR TEIXEIRA', cidade: 'UBA', tag: 'MG' },
+  { id: 484374, nome: 'CABANA DO EVAIR', cidade: 'SLV', tag: 'MG' },
+  { id: 484366, nome: 'CABANA DO EVAIR 2', cidade: 'SLV', tag: 'MG' },
+  { id: 484358, nome: 'CABANA DO EVAIR 3', cidade: 'SLV', tag: 'MG' },
+  { id: 484320, nome: 'BAR DA LOIRA', cidade: 'BT', tag: 'MG' },
+  { id: 484331, nome: 'BAR DA LOIRA 2', cidade: 'BT', tag: 'MG' },
+  { id: 484347, nome: 'CABANA DO EVAIR 4', cidade: 'SLV', tag: 'MG' },
+  { id: 484317, nome: 'BAR DA LOIRA 3', cidade: 'BT', tag: 'MG' },
+  { id: 484353, nome: 'CABANA DO EVAIR 5', cidade: 'SLV', tag: 'MG' },
+  { id: 484327, nome: 'LUCIANA BAR', cidade: 'RP', tag: 'MG' },
+  { id: 484314, nome: 'BAR PAULINHO VIT', cidade: 'UBA', tag: 'MG' },
+  { id: 484381, nome: 'CABANA DO EVAIR 6', cidade: 'SLV', tag: 'MG' },
+  { id: 484312, nome: 'BAR PAULINHO VIT 2', cidade: 'UBA', tag: 'MG' },
+  { id: 484367, nome: 'CABANA DO EVAIR 7', cidade: 'SLV', tag: 'MG' },
+  { id: 484034, nome: 'BAR TEIXEIRA 2', cidade: 'UBA', tag: 'MG' },
+  { id: 484325, nome: 'LUCIANA BAR 2', cidade: 'RP', tag: 'MG' },
+  { id: 484369, nome: 'CABANA DO EVAIR 8', cidade: 'SLV', tag: 'MG' },
+  { id: 484373, nome: 'CABANA DO EVAIR 9', cidade: 'SLV', tag: 'MG' },
+  { id: 484342, nome: 'CABANA DO EVAIR 10', cidade: 'SLV', tag: 'MG' },
+  { id: 49852,  nome: 'COR BAR DO TIAO', cidade: 'RIO POMBA', tag: 'MG' },
+  { id: 51392,  nome: 'CAPINHA SUPERMERCADO', cidade: 'RIO POMBA', tag: 'MG' },
+  { id: 44877,  nome: 'BAR CLAUDINHO NAQUE', cidade: 'LEOPOLDINA', tag: 'MG' },
+  { id: 72652,  nome: 'ABACAXI BAR BELO VALE', cidade: 'BELO VALE', tag: 'MG' },
+];
+
+// Cartelas top (simuladas)
+const CARTELAS_DESTAQUE = [
+  { id: 481035, ponto: 'BAR DO MARCOS', nums: [1,27,44,62,89, 7,26,40,59,86, 14,22,50,69,79] },
+  { id: 484029, ponto: 'BAR TEIXEIRA', nums: [13,22,41,68,81, 3,35,46,57,88, 7,24,54,67,82] },
+  { id: 484374, ponto: 'CABANA EVAIR', nums: [10,21,47,58,80, 16,27,41,67,76, 14,20,38,69,81] },
+  { id: 49852,  ponto: 'COR BAR DO TIAO', nums: [8,30,44,61,73, 15,32,51,63,78, 14,29,54,65,83] },
+  { id: 51392,  ponto: 'CAPINHA SUPER', nums: [8,30,54,61,73, 11,28,44,63,86, 13,21,47,68,88] },
+];
+
+const ULTIMOS_GANHADORES = [
+  'SORTEIO 2458 · [Kuadra] #481035 · BAR DO MARCOS',
+  'SORTEIO 2458 · [Kina] #480919 · UBA-TANQUINHO',
+  'SORTEIO 2458 · [Keno] #481020 · BAR DO MARCOS',
+  'SORTEIO 2215 · [Keno] #87084 · PEREIRA BAR',
+  'SORTEIO 2215 · [Kina] #49852 · COR BAR DO TIAO',
+];
+
+// ─── INIT ──────────────────────────────────────────────
+async function init() {
+  buildGrade()
+  buildTicker()
+  setInterval(updateProximo, 1000)
+  updateProximo()
+
+  await detectarSorteioAtivo()
+  assinarMudancaSorteio()
+}
+
+// ─── DETECTAR SORTEIO ATIVO ───────────────────────────
+async function detectarSorteioAtivo() {
+  // Tenta ativo primeiro, depois agendado mais recente
+  let { data } = await sb
+    .from('sorteios')
+    .select('id')
+    .in('status', ['ativo', 'agendado'])
+    .order('inicio_em', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (!data) {
+    document.getElementById('statusText').textContent = 'AGUARDANDO'
+    return
+  }
+
+  SORTEIO_ID = data.id
+  await carregarSorteio()
+  await carregarPontos()
+  await carregarCartelas()
+  await carregarBolasExistentes()
+  await carregarGanhadores()
+  assinarBolas()
+  assinarGanhadores()
+}
+
+// ─── REALTIME: MUDANÇA DE SORTEIO ────────────────────
+function assinarMudancaSorteio() {
+  sb.channel('sorteios-status')
+    .on('postgres_changes', {
+      event:  'UPDATE',
+      schema: 'public',
+      table:  'sorteios'
+    }, async payload => {
+      // Novo sorteio ficou ativo → recarrega tudo
+      if (payload.new.status === 'ativo' && payload.new.id !== SORTEIO_ID) {
+        SORTEIO_ID = payload.new.id
+        sorteadas  = []
+        buildGrade()
+        await carregarSorteio()
+        await carregarPontos()
+        await carregarCartelas()
+        assinarBolas()
+        assinarGanhadores()
+      }
+    })
+    .subscribe()
+}
+
+// ─── CARREGAR SORTEIO ─────────────────────────────────
+async function carregarSorteio() {
+  const { data } = await sb
+    .from('sorteios')
+    .select('*')
+    .eq('id', SORTEIO_ID)
+    .single()
+
+  if (!data) return
+
+  document.getElementById('sorteioNum').textContent = `#${data.numero}`
+  acumBola = data.acumulado_ate_bola || 35
+  document.getElementById('acumBola').textContent = acumBola
+
+  const arr = data.arrecadacao_total || 0
+  const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+
+  const kuadra = arr * data.pct_kuadra / 100
+  const kina   = arr * data.pct_kina   / 100
+  const keno   = (arr * data.pct_keno  / 100) + (data.acumulado_valor || 0)
+
+  document.querySelectorAll('.prize-value.kuadra').forEach(el => el.textContent = fmt(kuadra))
+  document.querySelectorAll('.prize-value.kina').forEach(el => el.textContent = fmt(kina))
+  document.querySelectorAll('.prize-value.keno').forEach(el => el.textContent = fmt(keno))
+  document.querySelectorAll('.bottom-val.kuadra').forEach(el => el.textContent = fmt(kuadra))
+  document.querySelectorAll('.bottom-val.kina').forEach(el => el.textContent = fmt(kina))
+  document.querySelectorAll('.bottom-val.keno').forEach(el => el.textContent = fmt(keno))
+  document.getElementById('acumVal').textContent =
+    Number(keno).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+
+  const dt = new Date(data.inicio_em)
+  const dd = String(dt.getDate()).padStart(2, '0')
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const hh = String(dt.getHours()).padStart(2, '0')
+  const mi = String(dt.getMinutes()).padStart(2, '0')
+  document.getElementById('sorteioData').textContent = `${dd}/${mm} · ${hh}:${mi}`
+}
+
+// ─── CARREGAR PONTOS ──────────────────────────────────
+async function carregarPontos() {
+  const { data } = await sb
+    .from('pontos')
+    .select('id, nome, cidade, estado')
+    .eq('ativo', true)
+    .order('nome')
+
+  if (!data || data.length === 0) return
+
+  document.getElementById('pontosCount').textContent = data.length
+
+  const list = document.getElementById('pontosList')
+  list.innerHTML = ''
+  data.forEach(p => {
+    const row = document.createElement('div')
+    row.className = 'ponto-row'
+    row.id = `ponto-${p.id}`
+    row.innerHTML = `
+      <div>
+        <div class="ponto-name">${p.nome}</div>
+        <div class="ponto-id">${p.cidade}</div>
+      </div>
+      <div class="ponto-tags">
+        <span class="ponto-tag tag-mg">${p.estado}</span>
+      </div>
+    `
+    list.appendChild(row)
+  })
+}
+
+// ─── CARREGAR CARTELAS ────────────────────────────────
+async function carregarCartelas() {
+  const { data } = await sb
+    .from('cartelas')
+    .select('id, codigo, numeros, ponto_id, pontos(nome)')
+    .eq('sorteio_id', SORTEIO_ID)
+    .eq('status', 'paga')
+    .limit(5)
+
+  if (!data) return
+  cartelasDB = data
+
+  const list = document.getElementById('cartelasList')
+  list.innerHTML = ''
+  data.forEach(c => {
+    const pontoNome = c.pontos?.nome || '—'
+    const card = document.createElement('div')
+    card.className = 'cartela-card'
+    card.id = `cartela-${c.id}`
+    const numsHtml = c.numeros.map(n =>
+      `<div class="cartela-num" id="cn-${c.id}-${n}">${n}</div>`
+    ).join('')
+    card.innerHTML = `
+      <div class="cartela-header">
+        <span class="cartela-id">#${c.codigo}</span>
+        <span class="cartela-ponto">${pontoNome}</span>
+      </div>
+      <div class="cartela-grid">${numsHtml}</div>
+    `
+    list.appendChild(card)
+  })
+}
+
+// ─── CARREGAR BOLAS EXISTENTES ────────────────────────
+async function carregarBolasExistentes() {
+  const { data } = await sb
+    .from('bolas')
+    .select('numero, sequencia')
+    .eq('sorteio_id', SORTEIO_ID)
+    .order('sequencia')
+
+  if (!data || data.length === 0) return
+
+  data.forEach((b, i) => processarBola(b.numero, i === data.length - 1))
+}
+
+// ─── CARREGAR GANHADORES ──────────────────────────────
+async function carregarGanhadores() {
+  const { data } = await sb
+    .from('ganhadores')
+    .select('tipo, premio_valor, cartelas(codigo), pontos(nome)')
+    .eq('sorteio_id', SORTEIO_ID)
+
+  if (!data || data.length === 0) return
+
+  const inner = document.getElementById('tickerInner')
+  const items = [...data, ...data].map(g =>
+    `<div class="ticker-item">
+      <div class="ticker-dot"></div>
+      SORTEIO ATUAL · [${g.tipo.toUpperCase()}] #${g.cartelas?.codigo || '—'} · ${g.pontos?.nome || '—'}
+    </div>`
+  ).join('')
+  inner.innerHTML = items
+}
+
+// ─── REALTIME: BOLAS ──────────────────────────────────
+function assinarBolas() {
+  sb.channel('bolas-realtime')
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'bolas',
+      filter: `sorteio_id=eq.${SORTEIO_ID}`
+    }, payload => {
+      processarBola(payload.new.numero, true)
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        document.getElementById('statusText').textContent = 'AO VIVO'
+      }
+    })
+}
+
+// ─── REALTIME: GANHADORES ─────────────────────────────
+function assinarGanhadores() {
+  sb.channel('ganhadores-realtime')
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'ganhadores',
+      filter: `sorteio_id=eq.${SORTEIO_ID}`
+    }, async payload => {
+      const { data: cartela } = await sb
+        .from('cartelas')
+        .select('codigo, pontos(nome)')
+        .eq('id', payload.new.cartela_id)
+        .single()
+
+      const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+      mostrarGanhador({
+        tipo:    payload.new.tipo.toUpperCase(),
+        ponto:   cartela?.pontos?.nome || '—',
+        cartela: `#${cartela?.codigo || '—'}`,
+        premio:  fmt(payload.new.premio_valor)
+      })
+
+      await carregarGanhadores()
+    })
+    .subscribe()
+}
+
+// ─── PROCESSAR BOLA ───────────────────────────────────
+function processarBola(bola, animar = true) {
+  sorteadas.push(bola)
+
+  document.getElementById('bolaCount').textContent = String(sorteadas.length).padStart(2, '0')
+  document.getElementById('bolaNumero').textContent = bola
+
+  const colors = [
+    'radial-gradient(circle at 35% 30%, #ffb840, #e07010 40%, #7a3a00 80%)',
+    'radial-gradient(circle at 35% 30%, #5ec8ff, #1478d4 40%, #0a3a7a 80%)',
+    'radial-gradient(circle at 35% 30%, #a0e060, #40a020 40%, #1a5000 80%)',
+    'radial-gradient(circle at 35% 30%, #ff7090, #d02050 40%, #6a0020 80%)',
+    'radial-gradient(circle at 35% 30%, #c080ff, #6020d0 40%, #2a0060 80%)',
+  ]
+  const shadows = [
+    '0 0 40px rgba(255,184,64,0.4)',
+    '0 0 40px rgba(74,176,255,0.4)',
+    '0 0 40px rgba(160,224,96,0.4)',
+    '0 0 40px rgba(255,112,144,0.4)',
+    '0 0 40px rgba(192,128,255,0.4)',
+  ]
+  const ci = Math.floor((bola - 1) / 18)
+  const bg = document.getElementById('bolaGrande')
+  bg.style.background  = colors[ci % colors.length]
+  bg.style.boxShadow   = shadows[ci % 5] + ', 0 0 80px rgba(74,176,255,0.15), inset 0 2px 8px rgba(255,255,255,0.3)'
+
+  if (animar) {
+    bg.style.animation = 'none'
+    bg.offsetHeight
+    bg.style.animation = 'bolaEntrada 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+  }
+
+  // Grade
+  const prevBola = sorteadas.length > 1 ? sorteadas[sorteadas.length - 2] : null
+  if (prevBola) {
+    const prev = document.getElementById(`num-${prevBola}`)
+    if (prev) { prev.classList.remove('nova'); prev.classList.add('sorteada') }
+  }
+  const cell = document.getElementById(`num-${bola}`)
+  if (cell) {
+    cell.classList.remove('nova', 'sorteada')
+    cell.classList.add(animar ? 'nova' : 'sorteada')
+  }
+
+  atualizarUltimas()
+  atualizarCartelas(bola)
+
+  const pct = Math.min(100, (sorteadas.length / acumBola) * 100)
+  document.getElementById('acumBar').style.width = pct + '%'
+}
+
+function buildGrade() {
+  const g = document.getElementById('grade');
+  g.innerHTML = '';
+  for(let i=1; i<=90; i++) {
+    const d = document.createElement('div');
+    d.className = 'num-cell';
+    d.id = `num-${i}`;
+    d.textContent = i;
+    g.appendChild(d);
+  }
+}
+
+function buildPontos_UNUSED() {
+  const list = document.getElementById('pontosList');
+  list.innerHTML = '';
+  PONTOS.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'ponto-row';
+    row.id = `ponto-${p.id}`;
+    row.innerHTML = `
+      <div>
+        <div class="ponto-name">${p.nome}</div>
+        <div class="ponto-id">#${p.id}</div>
+      </div>
+      <div class="ponto-tags">
+        <span class="ponto-tag tag-mg">${p.tag}</span>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function buildCartelas_UNUSED() {
+  // substituída por carregarCartelas() que usa dados reais do banco
+}
+
+function buildTicker() {
+  // Ticker inicial vazio — será preenchido por carregarGanhadores()
+  document.getElementById('tickerInner').innerHTML =
+    '<div class="ticker-item"><div class="ticker-dot"></div>Aguardando ganhadores...</div>'
+}
+
+function atualizarUltimas() {
+  const wrap = document.getElementById('ultimasBolas');
+  const classes = ['c1','c2','c3','c4','c5','c6'];
+  const last6 = sorteadas.slice(-6).reverse();
+  const children = wrap.children;
+  for(let i=0; i<6; i++) {
+    const el = children[i];
+    if(last6[i]) {
+      el.textContent = last6[i];
+      el.style.opacity = '1';
+      el.className = `bola-mini ${classes[i]}`;
+    } else {
+      el.textContent = '—';
+      el.style.opacity = '0.2';
+    }
+  }
+}
+
+function atualizarCartelas(bola) {
+  cartelasDB.forEach(c => {
+    if (c.numeros.includes(bola)) {
+      const el = document.getElementById(`cn-${c.id}-${bola}`)
+      if (el) {
+        el.classList.remove('hit')
+        el.classList.add('hit-new')
+        setTimeout(() => {
+          el.classList.remove('hit-new')
+          el.classList.add('hit')
+        }, 500)
+      }
+      const acertos = c.numeros.filter(n => sorteadas.includes(n)).length
+      const card = document.getElementById(`cartela-${c.id}`)
+      if (card && acertos >= 12) card.classList.add('destaque')
+    }
+  })
+}
+
+function mostrarGanhador(g) {
+  // Destaca ponto
+  const pontoRow = document.querySelector(`[id^="ponto-"]`);
+  if(pontoRow) pontoRow.classList.add('winner');
+
+  // Overlay
+  document.getElementById('winnerTipo').textContent = g.tipo;
+  document.getElementById('winnerPonto').textContent = g.ponto;
+  document.getElementById('winnerCartela').textContent = `Cartela ${g.cartela}`;
+  document.getElementById('winnerPremio').textContent = g.premio;
+
+  const overlay = document.getElementById('winnerOverlay');
+  overlay.classList.add('show');
+
+  // Confetti
+  spawnConfetti();
+
+  setTimeout(() => {
+    overlay.classList.remove('show');
+  }, 5000);
+}
+
+function spawnConfetti() {
+  const wrap = document.getElementById('confettiWrap');
+  const colors = ['#f5c842','#00e87a','#4ab0ff','#ff3b5c','#c080ff','#ffffff'];
+  for(let i=0; i<80; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = Math.random()*100 + 'vw';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.width = (6+Math.random()*8) + 'px';
+      p.style.height = (8+Math.random()*12) + 'px';
+      p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      const dur = 2 + Math.random()*3;
+      p.style.animationDuration = dur + 's';
+      p.style.animationDelay = (Math.random()*0.5) + 's';
+      wrap.appendChild(p);
+      setTimeout(() => p.remove(), (dur+1)*1000);
+    }, i * 30);
+  }
+}
+
+// ─── COUNTDOWN ────────────────────────────────────────
+function updateProximo() {
+  proximoCountdown--;
+  if(proximoCountdown < 0) proximoCountdown = 180;
+  const m = Math.floor(proximoCountdown / 60);
+  const s = proximoCountdown % 60;
+  document.getElementById('proximoTimer').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// ─── START ────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

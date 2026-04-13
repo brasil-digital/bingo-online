@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bingo — Minha Cartela</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --bg: #06080a;
+  --surface: #0e1218;
+  --surface2: #161c24;
+  --surface3: #1e2630;
+  --border: #252f3a;
+  --border2: #303d4a;
+  --text: #e8eef5;
+  --muted: #4a5a6a;
+  --muted2: #7a8fa0;
+  /* Estados da célula */
+  --cell-idle:    #131b24;
+  --cell-idle-b:  #1e2a35;
+  --cell-hit:     #0d2540;
+  --cell-hit-b:   #1a4a7a;
+  --cell-hit-t:   #40b4ff;
+  --cell-new:     #0a2e1a;
+  --cell-new-b:   #1a6a3a;
+  --cell-new-t:   #00e676;
+  /* Prêmios */
+  --c-kuadra: #40c4ff;
+  --c-kina:   #ffd740;
+  --c-keno:   #00e676;
+  --c-alert:  #ff5252;
+}
+
+html, body {
+  width:100%; min-height:100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ───────────────────────────────── */
+.header {
+  position: sticky; top:0; z-index:50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+
+.header-top {
+  display: flex; align-items:center; justify-content:space-between;
+  margin-bottom: 10px;
+}
+
+.logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px; font-weight:700; letter-spacing:2px;
+  color: var(--c-keno);
+}
+
+.logo span { color: var(--text); }
+
+.live-badge {
+  display: flex; align-items:center; gap:5px;
+  background: rgba(0,230,118,.1);
+  border: 1px solid rgba(0,230,118,.25);
+  border-radius: 100px;
+  padding: 4px 10px;
+  font-size: 11px; font-weight:800;
+  color: var(--c-keno); letter-spacing:1px;
+}
+
+.live-dot {
+  width:6px; height:6px; border-radius:50%;
+  background: var(--c-keno);
+  animation: blink 1.4s ease infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* PRIZES ROW */
+.prizes-row {
+  display: grid; grid-template-columns: repeat(3,1fr); gap:8px;
+}
+
+.prize-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  text-align: center;
+}
+
+.prize-chip-lbl {
+  font-size: 9px; font-weight:800; letter-spacing:1.5px;
+  text-transform:uppercase; color: var(--muted2); margin-bottom:2px;
+}
+
+.prize-chip-val {
+  font-family: 'Oswald', sans-serif;
+  font-size: 15px; font-weight:600;
+}
+
+.prize-chip-val.k { color: var(--c-kuadra); }
+.prize-chip-val.ki { color: var(--c-kina); }
+.prize-chip-val.ke { color: var(--c-keno); }
+
+/* ── BOLA ATUAL ───────────────────────────── */
+.bola-section {
+  padding: 16px;
+  display: flex; align-items:center; gap:16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position:sticky; top:88px; z-index:40;
+}
+
+.bola-atual-wrap {
+  position: relative; flex-shrink:0;
+}
+
+.bola-atual {
+  width: 68px; height:68px; border-radius:50%;
+  display: flex; align-items:center; justify-content:center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 34px; font-weight:700; color:#fff;
+  background: radial-gradient(circle at 35% 30%, #5ec8ff, #1478d4 45%, #0a3a7a 80%);
+  box-shadow: 0 0 24px rgba(74,176,255,.4), inset 0 2px 6px rgba(255,255,255,.25);
+  animation: bolaIn .4s cubic-bezier(.34,1.56,.64,1) both;
+  position: relative; z-index:1;
+}
+
+.bola-atual::after {
+  content:'';
+  position:absolute; top:12%; left:20%;
+  width:30%; height:20%;
+  background: rgba(255,255,255,.25);
+  border-radius:50%; transform:rotate(-30deg);
+  filter:blur(3px);
+}
+
+@keyframes bolaIn {
+  from { transform:scale(0) rotate(-180deg); opacity:0; }
+  to   { transform:scale(1) rotate(0deg); opacity:1; }
+}
+
+.bola-info { flex:1; }
+
+.bola-count {
+  font-size: 12px; color: var(--muted2);
+  margin-bottom: 3px;
+}
+
+.bola-count strong {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px; color: var(--text); font-weight:600;
+}
+
+.ultimas-row {
+  display: flex; gap:5px; align-items:center;
+}
+
+.bola-mini {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px; font-weight:600; color:#fff;
+  flex-shrink:0;
+}
+
+.bm1 { background: radial-gradient(circle at 35% 30%,#ffb840,#e07010 45%,#7a3a00 80%); }
+.bm2 { background: radial-gradient(circle at 35% 30%,#5ec8ff,#1478d4 45%,#0a3a7a 80%); }
+.bm3 { background: radial-gradient(circle at 35% 30%,#a0e060,#40a020 45%,#1a5000 80%); }
+.bm4 { background: radial-gradient(circle at 35% 30%,#ff7090,#d02050 45%,#6a0020 80%); }
+.bm5 { background: radial-gradient(circle at 35% 30%,#c080ff,#6020d0 45%,#2a0060 80%); }
+
+/* ── CARTELAS ─────────────────────────────── */
+.cartelas-section { padding: 14px 16px 24px; }
+
+.section-title {
+  font-size:13px; font-weight:800;
+  color: var(--muted2); letter-spacing:1.5px;
+  text-transform:uppercase;
+  margin-bottom: 14px;
+  display:flex; align-items:center; gap:8px;
+}
+
+.section-title::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+/* CARTELA CARD */
+.cartela-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: border-color .3s, box-shadow .3s;
+  position: relative;
+}
+
+.cartela-card.quase-keno {
+  border-color: rgba(0,230,118,.5);
+  box-shadow: 0 0 20px rgba(0,230,118,.15);
+  animation: alertPulse 1s ease infinite;
+}
+
+.cartela-card.keno-ganho {
+  border-color: var(--c-keno);
+  box-shadow: 0 0 40px rgba(0,230,118,.35);
+}
+
+.cartela-card.kina-ganho {
+  border-color: var(--c-kina);
+  box-shadow: 0 0 30px rgba(255,215,64,.25);
+}
+
+.cartela-card.kuadra-ganho {
+  border-color: var(--c-kuadra);
+  box-shadow: 0 0 25px rgba(64,196,255,.2);
+}
+
+@keyframes alertPulse {
+  0%,100% { box-shadow: 0 0 20px rgba(0,230,118,.15); }
+  50%     { box-shadow: 0 0 35px rgba(0,230,118,.35); }
+}
+
+.cartela-top {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items:center; justify-content:space-between;
+}
+
+.cartela-code {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px; font-weight:600;
+  color: var(--c-keno);
+}
+
+.cartela-meta { font-size:11px; color: var(--muted2); }
+
+.cartela-premio-badge {
+  display: none;
+  align-items:center; gap:5px;
+  padding: 4px 10px; border-radius:100px;
+  font-size: 11px; font-weight:800; letter-spacing:.5px;
+}
+
+.cartela-card.kuadra-ganho .cartela-premio-badge.k  { display:flex; background:rgba(64,196,255,.15); color:var(--c-kuadra); }
+.cartela-card.kina-ganho   .cartela-premio-badge.ki { display:flex; background:rgba(255,215,64,.15); color:var(--c-kina); }
+.cartela-card.keno-ganho   .cartela-premio-badge.ke { display:flex; background:rgba(0,230,118,.15); color:var(--c-keno); }
+
+/* GRADE 3×5 */
+.cartela-body { padding: 12px; }
+
+.linha {
+  display: grid; grid-template-columns: repeat(5,1fr);
+  gap: 5px; margin-bottom: 5px;
+  position: relative;
+}
+
+.linha:last-child { margin-bottom:0; }
+
+/* LINHA INDICADOR (acertos) */
+.linha-status {
+  position:absolute; right:-32px; top:50%; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center;
+  width:24px; height:24px;
+  font-size:11px; font-weight:800;
+  border-radius:50%;
+  color: var(--muted);
+  background: var(--surface3);
+  transition: all .3s;
+}
+
+.linha-status.kina-linha {
+  background: rgba(255,215,64,.2);
+  color: var(--c-kina);
+  box-shadow: 0 0 8px rgba(255,215,64,.3);
+  animation: linhaGanha .4s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes linhaGanha {
+  0% { transform:translateY(-50%) scale(1.5); }
+  100% { transform:translateY(-50%) scale(1); }
+}
+
+/* CÉLULA */
+.cel {
+  aspect-ratio: 1;
+  border-radius: 7px;
+  display: flex; align-items:center; justify-content:center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 17px; font-weight:600;
+  background: var(--cell-idle);
+  border: 1px solid var(--cell-idle-b);
+  color: var(--muted2);
+  transition: all .25s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+
+.cel.hit {
+  background: var(--cell-hit);
+  border-color: var(--cell-hit-b);
+  color: var(--cell-hit-t);
+}
+
+.cel.hit-new {
+  background: var(--cell-new);
+  border-color: var(--cell-new-b);
+  color: var(--cell-new-t);
+  animation: celHit .5s ease;
+}
+
+@keyframes celHit {
+  0%   { transform:scale(1.25); background: rgba(0,230,118,.4); }
+  60%  { transform:scale(.95); }
+  100% { transform:scale(1); background: var(--cell-new); }
+}
+
+.cel.hit::after, .cel.hit-new::after {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.12), transparent 60%);
+  pointer-events:none;
+}
+
+/* PROGRESSO DA CARTELA */
+.cartela-footer {
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.prog-row {
+  display:flex; align-items:center; gap:10px; margin-bottom:6px;
+}
+
+.prog-label { font-size:11px; color:var(--muted2); flex-shrink:0; }
+
+.prog-track {
+  flex:1; height:5px; background:var(--surface3); border-radius:3px; overflow:hidden;
+}
+
+.prog-fill {
+  height:100%; border-radius:3px;
+  background: linear-gradient(90deg, #1478d4, #00e676);
+  transition: width .4s ease;
+}
+
+.prog-val {
+  font-family:'Oswald',sans-serif; font-size:13px; font-weight:600;
+  color: var(--text); flex-shrink:0;
+}
+
+.acertos-chips {
+  display:flex; gap:6px;
+}
+
+.acerto-chip {
+  flex:1; text-align:center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px; padding:4px 6px;
+}
+
+.chip-lbl { font-size:9px; color:var(--muted); letter-spacing:.5px; margin-bottom:1px; }
+.chip-val {
+  font-family:'Oswald',sans-serif; font-size:14px; font-weight:600;
+  color: var(--muted2);
+}
+.chip-val.full { color:var(--c-kina) !important; }
+
+/* ── WINNER OVERLAY ──────────────────────── */
+.winner-overlay {
+  position: fixed; inset:0;
+  background: rgba(6,8,10,.88);
+  z-index:200;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition: opacity .4s;
+}
+
+.winner-overlay.show {
+  opacity:1; pointer-events:all;
+}
+
+.winner-card {
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 32px 28px 28px;
+  text-align:center; margin:20px;
+  position:relative; overflow:hidden;
+  animation: winCard .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+@keyframes winCard {
+  from { transform:scale(.5); opacity:0; }
+  to   { transform:scale(1); opacity:1; }
+}
+
+.win-ico { font-size:56px; margin-bottom:10px; }
+.win-tipo { font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); margin-bottom:6px; }
+.win-nome { font-family:'Oswald',sans-serif; font-size:30px; font-weight:700; letter-spacing:1px; margin-bottom:6px; }
+.win-cartela { font-size:13px; color:var(--muted2); margin-bottom:18px; }
+.win-premio { font-family:'Oswald',sans-serif; font-size:48px; font-weight:700; }
+.win-sub { font-size:12px; color:var(--muted2); margin-top:4px; }
+
+.win-close {
+  margin-top:20px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius:10px; padding:12px 24px;
+  font-size:14px; font-weight:700;
+  color: var(--text); cursor:pointer;
+  width:100%; font-family:'Nunito',sans-serif;
+  transition:all .15s;
+}
+.win-close:active { background:var(--surface2); }
+
+/* ── CONFETTI ────────────────────────────── */
+.confetti-layer {
+  position:fixed; inset:0; pointer-events:none; z-index:199; overflow:hidden;
+}
+
+.cp {
+  position:absolute; top:-20px;
+  animation: cpFall linear forwards;
+  border-radius:2px;
+}
+
+@keyframes cpFall {
+  0%   { transform:translateY(0) rotate(0deg); opacity:1; }
+  100% { transform:translateY(110vh) rotate(540deg); opacity:0; }
+}
+
+/* ── SORTEIO ENCERRADO ───────────────────── */
+.encerrado-banner {
+  margin: 16px; padding:14px 16px;
+  background: rgba(255,82,82,.07);
+  border: 1px solid rgba(255,82,82,.2);
+  border-radius:10px;
+  font-size:13px; color:var(--c-alert); font-weight:700;
+  text-align:center; display:none;
+}
+
+/* ── CONTROLES DEMO ──────────────────────── */
+.demo-bar {
+  position: fixed; bottom:0; left:0; right:0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 20px;
+  display:flex; gap:8px; z-index:100;
+}
+
+.demo-btn {
+  flex:1; padding:12px 8px;
+  border-radius:10px; border:none;
+  font-size:13px; font-weight:700;
+  cursor:pointer; font-family:'Nunito',sans-serif;
+  transition:all .15s;
+}
+
+.demo-btn:active { transform:scale(.97); }
+
+.demo-btn.green  { background:rgba(0,230,118,.15); color:var(--c-keno); border:1px solid rgba(0,230,118,.3); }
+.demo-btn.blue   { background:rgba(64,196,255,.15); color:var(--c-kuadra); border:1px solid rgba(64,196,255,.3); }
+.demo-btn.red    { background:rgba(255,82,82,.12); color:var(--c-alert); border:1px solid rgba(255,82,82,.25); }
+
+/* Espaço para demo bar */
+.spacer { height: 80px; }
+</style>
+</head>
+<body>
+
+<!-- CONFETTI -->
+<div class="confetti-layer" id="confettiLayer"></div>
+
+<!-- WINNER OVERLAY -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-card">
+    <div class="win-ico" id="winIco">🏆</div>
+    <div class="win-tipo" id="winTipo">KENO</div>
+    <div class="win-nome" id="winNome">VOCÊ GANHOU!</div>
+    <div class="win-cartela" id="winCartela">Cartela #49852 · Sorteio #2474</div>
+    <div class="win-premio" id="winPremio" style="color:var(--c-keno)">R$20.000,00</div>
+    <div class="win-sub">O valor será enviado via PIX em até 2h</div>
+    <button class="win-close" onclick="fecharWinner()">✓ Fechar</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">BINGO <span>ONLINE</span></div>
+    <div class="live-badge"><div class="live-dot"></div>AO VIVO</div>
+  </div>
+  <div class="prizes-row">
+    <div class="prize-chip">
+      <div class="prize-chip-lbl">Kuadra</div>
+      <div class="prize-chip-val k">R$5.000</div>
+    </div>
+    <div class="prize-chip">
+      <div class="prize-chip-lbl">Kina</div>
+      <div class="prize-chip-val ki">R$10.000</div>
+    </div>
+    <div class="prize-chip">
+      <div class="prize-chip-lbl">Keno</div>
+      <div class="prize-chip-val ke">R$20.000</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOLA ATUAL -->
+<div class="bola-section">
+  <div class="bola-atual-wrap">
+    <div class="bola-atual" id="bolaAtual">—</div>
+  </div>
+  <div class="bola-info">
+    <div class="bola-count">
+      Bola <strong id="bolaSeq">0</strong> de 90
+    </div>
+    <div class="ultimas-row" id="ultimasRow">
+      <div class="bola-mini bm1" style="opacity:.2">—</div>
+      <div class="bola-mini bm2" style="opacity:.2">—</div>
+      <div class="bola-mini bm3" style="opacity:.2">—</div>
+      <div class="bola-mini bm4" style="opacity:.2">—</div>
+      <div class="bola-mini bm5" style="opacity:.2">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ENCERRADO -->
+<div class="encerrado-banner" id="encerradoBanner">
+  ■ Sorteio #2474 encerrado · Próximo sorteio: 21:00
+</div>
+
+<!-- CARTELAS -->
+<div class="cartelas-section">
+  <div class="section-title">Minhas Cartelas</div>
+  <div id="cartelasContainer"></div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- BUSCA DE CARTELA -->
+<div class="demo-bar" id="buscaBar">
+  <input id="inputCodigo" class="demo-btn blue" type="number"
+    placeholder="Código da cartela ex: 200051"
+    style="flex:2;text-align:left;padding-left:14px;font-size:14px;"
+    onkeydown="if(event.key==='Enter')buscarCartela()">
+  <button class="demo-btn green" onclick="buscarCartela()" style="flex:1">🔍 Buscar</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://imvfraakhmtjfdclqfar.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdmZyYWFraG10amZkY2xxZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODE5NzMsImV4cCI6MjA5MTY1Nzk3M30.OmZ2urzWq9p7W6q5n2im6TfrOdGMWHAII3PTWQx4Q44'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+// ── ESTADO ───────────────────────────────────────────────
+let bolasSorteadas  = new Set()
+let bolasList       = []
+let premiosDados    = { kuadra: false, kina: false, keno: false }
+let SORTEIO_ID      = null
+let CARTELAS_JOGADOR = []
+let ganhadoresVistos = new Set()
+
+// ── BUSCAR CARTELA POR CÓDIGO ────────────────────────────
+async function buscarCartela() {
+  const codigo = parseInt(document.getElementById('inputCodigo').value)
+  if (!codigo) { alert('Digite o código da cartela.'); return }
+
+  const { data: cartela, error } = await sb
+    .from('cartelas')
+    .select('id, codigo, numeros, sorteio_id, status')
+    .eq('codigo', codigo)
+    .single()
+
+  if (error || !cartela) {
+    alert('Cartela #' + codigo + ' não encontrada.')
+    return
+  }
+  if (cartela.status !== 'paga') {
+    alert('Cartela #' + codigo + ' ainda não está paga.')
+    return
+  }
+
+  // Adiciona se ainda não estiver na lista
+  if (!CARTELAS_JOGADOR.find(c => c.id === cartela.id)) {
+    CARTELAS_JOGADOR.push(cartela)
+    buildCartelas()
+  }
+
+  // Se ainda não tinha sorteio, inicializa com o sorteio desta cartela
+  if (!SORTEIO_ID) {
+    SORTEIO_ID = cartela.sorteio_id
+    await carregarSorteio()
+    await carregarBolasExistentes()
+    assinarBolas()
+    assinarGanhadores()
+  }
+
+  document.getElementById('inputCodigo').value = ''
+}
+
+// ── CARREGAR SORTEIO ─────────────────────────────────────
+async function carregarSorteio() {
+  const { data } = await sb
+    .from('sorteios')
+    .select('numero, inicio_em, pct_kuadra, pct_kina, pct_keno, arrecadacao_total, acumulado_valor')
+    .eq('id', SORTEIO_ID)
+    .single()
+
+  if (!data) return
+
+  const arr = data.arrecadacao_total || 0
+  const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+
+  document.querySelectorAll('.prize-chip-val.k').forEach(el =>
+    el.textContent = fmt(arr * data.pct_kuadra / 100))
+  document.querySelectorAll('.prize-chip-val.ki').forEach(el =>
+    el.textContent = fmt(arr * data.pct_kina / 100))
+  document.querySelectorAll('.prize-chip-val.ke').forEach(el =>
+    el.textContent = fmt((arr * data.pct_keno / 100) + (data.acumulado_valor || 0)))
+}
+
+// ── CARREGAR BOLAS EXISTENTES ────────────────────────────
+async function carregarBolasExistentes() {
+  const { data } = await sb
+    .from('bolas')
+    .select('numero, sequencia')
+    .eq('sorteio_id', SORTEIO_ID)
+    .order('sequencia')
+
+  if (!data || data.length === 0) return
+  data.forEach((b, i) => {
+    bolasSorteadas.add(b.numero)
+    bolasList.push(b.numero)
+    atualizarBolaUI(b.numero, i === data.length - 1)
+    CARTELAS_JOGADOR.forEach(c => atualizarCartela(c, b.numero))
+  })
+}
+
+// ── REALTIME: BOLAS ──────────────────────────────────────
+function assinarBolas() {
+  sb.channel('cartela-bolas')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'bolas',
+      filter: `sorteio_id=eq.${SORTEIO_ID}`
+    }, payload => {
+      const bola = payload.new.numero
+      bolasSorteadas.add(bola)
+      bolasList.push(bola)
+      atualizarBolaUI(bola, true)
+      CARTELAS_JOGADOR.forEach(c => atualizarCartela(c, bola))
+      verificarPremios()
+      if (navigator.vibrate) navigator.vibrate(50)
+    })
+    .subscribe()
+}
+
+// ── REALTIME: GANHADORES ─────────────────────────────────
+function assinarGanhadores() {
+  sb.channel('cartela-ganhadores')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'ganhadores',
+      filter: `sorteio_id=eq.${SORTEIO_ID}`
+    }, payload => {
+      const g = payload.new
+      if (ganhadoresVistos.has(g.id)) return
+      ganhadoresVistos.add(g.id)
+
+      // Verifica se o ganhador é uma das cartelas do jogador
+      const minhaCartela = CARTELAS_JOGADOR.find(c => c.id === g.cartela_id)
+      if (minhaCartela) {
+        const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+        mostrarGanhador(g.tipo, minhaCartela, fmt(g.premio_valor))
+      }
+    })
+    .subscribe()
+}
+
+// ── ATUALIZAR UI DA BOLA ─────────────────────────────────
+function atualizarBolaUI(bola, animar) {
+  const ci = Math.floor((bola - 1) / 18)
+  const bolaEl = document.getElementById('bolaAtual')
+  bolaEl.textContent = bola
+  bolaEl.style.background = BOLA_CORES[ci]
+  bolaEl.style.boxShadow = BOLA_SHADOWS[ci] + ', inset 0 2px 6px rgba(255,255,255,.25)'
+  if (animar) {
+    bolaEl.style.animation = 'none'
+    bolaEl.offsetHeight
+    bolaEl.style.animation = 'bolaIn .4s cubic-bezier(.34,1.56,.64,1) both'
+  }
+  document.getElementById('bolaSeq').textContent = bolasList.length
+  atualizarUltimas()
+}
+
+// ── DADOS DAS CARTELAS DO JOGADOR (agora vazio — preenchido pelo banco)
+// mantido apenas para compatibilidade com funções abaixo
+const CARTELAS_JOGADOR_PLACEHOLDER = []
+
+// ── ESTADO (mantido por compatibilidade) ──────────────────
+const sorteioAtivo = true
+
+// Cores das bolas por range
+const BOLA_CORES = [
+  'radial-gradient(circle at 35% 30%,#ffb840,#e07010 45%,#7a3a00 80%)',  // 1-18
+  'radial-gradient(circle at 35% 30%,#5ec8ff,#1478d4 45%,#0a3a7a 80%)',  // 19-36
+  'radial-gradient(circle at 35% 30%,#a0e060,#40a020 45%,#1a5000 80%)',  // 37-54
+  'radial-gradient(circle at 35% 30%,#ff7090,#d02050 45%,#6a0020 80%)',  // 55-72
+  'radial-gradient(circle at 35% 30%,#c080ff,#6020d0 45%,#2a0060 80%)',  // 73-90
+]
+const BOLA_SHADOWS = [
+  '0 0 20px rgba(255,184,64,.5)',
+  '0 0 20px rgba(74,176,255,.5)',
+  '0 0 20px rgba(160,224,96,.5)',
+  '0 0 20px rgba(255,112,144,.5)',
+  '0 0 20px rgba(192,128,255,.5)',
+]
+const MINI_CLASSES = ['bm1','bm2','bm3','bm4','bm5']
+
+// ── BUILD CARTELAS ───────────────────────────────────────────
+function buildCartelas() {
+  const container = document.getElementById('cartelasContainer')
+  container.innerHTML = ''
+
+  CARTELAS_JOGADOR.forEach(c => {
+    const card = document.createElement('div')
+    card.className = 'cartela-card'
+    card.id = `card-${c.id}`
+
+    const nums = c.numeros
+    const l1 = nums.slice(0,5), l2 = nums.slice(5,10), l3 = nums.slice(10,15)
+
+    card.innerHTML = `
+      <div class="cartela-top">
+        <div class="cartela-code">#${c.codigo}</div>
+        <div class="cartela-meta">Sorteio #2474 · 13/04</div>
+        <span class="cartela-premio-badge k">★ KUADRA</span>
+        <span class="cartela-premio-badge ki">★ KINA</span>
+        <span class="cartela-premio-badge ke">🏆 KENO</span>
+      </div>
+      <div class="cartela-body" style="padding-right:44px;">
+        <div class="linha" id="l1-${c.id}">
+          ${l1.map(n => `<div class="cel" id="cel-${c.id}-${n}">${n}</div>`).join('')}
+          <div class="linha-status" id="ls1-${c.id}">0</div>
+        </div>
+        <div class="linha" id="l2-${c.id}">
+          ${l2.map(n => `<div class="cel" id="cel-${c.id}-${n}">${n}</div>`).join('')}
+          <div class="linha-status" id="ls2-${c.id}">0</div>
+        </div>
+        <div class="linha" id="l3-${c.id}">
+          ${l3.map(n => `<div class="cel" id="cel-${c.id}-${n}">${n}</div>`).join('')}
+          <div class="linha-status" id="ls3-${c.id}">0</div>
+        </div>
+      </div>
+      <div class="cartela-footer">
+        <div class="prog-row">
+          <span class="prog-label">Progresso</span>
+          <div class="prog-track"><div class="prog-fill" id="pf-${c.id}" style="width:0%"></div></div>
+          <span class="prog-val" id="pv-${c.id}">0/15</span>
+        </div>
+        <div class="acertos-chips">
+          <div class="acerto-chip">
+            <div class="chip-lbl">LINHA 1</div>
+            <div class="chip-val" id="cv1-${c.id}">0/5</div>
+          </div>
+          <div class="acerto-chip">
+            <div class="chip-lbl">LINHA 2</div>
+            <div class="chip-val" id="cv2-${c.id}">0/5</div>
+          </div>
+          <div class="acerto-chip">
+            <div class="chip-lbl">LINHA 3</div>
+            <div class="chip-val" id="cv3-${c.id}">0/5</div>
+          </div>
+        </div>
+      </div>
+    `
+
+    container.appendChild(card)
+  })
+}
+
+
+// ── ATUALIZAR ÚLTIMAS BOLAS ──────────────────────────────────
+function atualizarUltimas() {
+  const row = document.getElementById('ultimasRow')
+  const classes = ['bm1','bm2','bm3','bm4','bm5']
+  const last5 = bolasList.slice(-5).reverse()
+  const children = row.children
+  for(let i=0;i<5;i++){
+    const el = children[i]
+    if(last5[i]){
+      el.textContent = last5[i]
+      el.style.opacity = '1'
+      el.className = 'bola-mini ' + classes[i]
+    } else {
+      el.textContent = '—'
+      el.style.opacity = '0.2'
+    }
+  }
+}
+
+// ── ATUALIZAR CARTELA ────────────────────────────────────────
+function atualizarCartela(cartela, bolaAtual) {
+  const nums   = cartela.numeros
+  const id     = cartela.id
+  const l1     = nums.slice(0,5), l2 = nums.slice(5,10), l3 = nums.slice(10,15)
+
+  const a1 = l1.filter(n => bolasSorteadas.has(n)).length
+  const a2 = l2.filter(n => bolasSorteadas.has(n)).length
+  const a3 = l3.filter(n => bolasSorteadas.has(n)).length
+  const total = a1+a2+a3
+
+  // Marca célula da bola atual
+  if(nums.includes(bolaAtual)){
+    const cel = document.getElementById(`cel-${id}-${bolaAtual}`)
+    if(cel){
+      cel.classList.remove('hit')
+      cel.classList.add('hit-new')
+      setTimeout(()=>{
+        cel.classList.remove('hit-new')
+        cel.classList.add('hit')
+      }, 600)
+    }
+  }
+
+  // Reatualiza todas as células
+  nums.forEach(n => {
+    const cel = document.getElementById(`cel-${id}-${n}`)
+    if(!cel) return
+    if(n === bolaAtual) return // já tratado acima
+    if(bolasSorteadas.has(n) && !cel.classList.contains('hit') && !cel.classList.contains('hit-new')){
+      cel.classList.add('hit')
+    }
+  })
+
+  // Status das linhas
+  const ls1 = document.getElementById(`ls1-${id}`)
+  const ls2 = document.getElementById(`ls2-${id}`)
+  const ls3 = document.getElementById(`ls3-${id}`)
+  ls1.textContent = a1; ls1.className = 'linha-status' + (a1===5?' kina-linha':'')
+  ls2.textContent = a2; ls2.className = 'linha-status' + (a2===5?' kina-linha':'')
+  ls3.textContent = a3; ls3.className = 'linha-status' + (a3===5?' kina-linha':'')
+
+  // Progresso
+  document.getElementById(`pf-${id}`).style.width = (total/15*100)+'%'
+  document.getElementById(`pv-${id}`).textContent = total+'/15'
+
+  // Chips por linha
+  document.getElementById(`cv1-${id}`).textContent = a1+'/5'
+  document.getElementById(`cv2-${id}`).textContent = a2+'/5'
+  document.getElementById(`cv3-${id}`).textContent = a3+'/5'
+  if(a1===5) document.getElementById(`cv1-${id}`).classList.add('full')
+  if(a2===5) document.getElementById(`cv2-${id}`).classList.add('full')
+  if(a3===5) document.getElementById(`cv3-${id}`).classList.add('full')
+
+  // Alerta visual quando perto do Keno
+  const card = document.getElementById(`card-${id}`)
+  if(total >= 13 && total < 15) card.classList.add('quase-keno')
+
+  // Cores do card por prêmio
+  if(total === 15){ card.classList.remove('quase-keno'); card.classList.add('keno-ganho') }
+  else if(a1===5||a2===5||a3===5) card.classList.add('kina-ganho')
+  else if(a1>=4||a2>=4||a3>=4) card.classList.add('kuadra-ganho')
+}
+
+// ── VERIFICAR PRÊMIOS (local — complementa o Realtime de ganhadores)
+function verificarPremios() {
+  // Apenas feedback visual local — o overlay oficial vem via assinarGanhadores()
+}
+
+// ── MOSTRAR GANHADOR ─────────────────────────────────────────
+const PREMIO_CONFIG = {
+  keno:   { ico:'🏆', nome:'VOCÊ FEZ KENO!',  cor:'var(--c-keno)' },
+  kina:   { ico:'⭐', nome:'VOCÊ FEZ KINA!',  cor:'var(--c-kina)' },
+  kuadra: { ico:'🎯', nome:'VOCÊ FEZ KUADRA!',cor:'var(--c-kuadra)' },
+}
+
+function mostrarGanhador(tipo, cartela, premioValor) {
+  const cfg = PREMIO_CONFIG[tipo] || PREMIO_CONFIG.keno
+  document.getElementById('winIco').textContent    = cfg.ico
+  document.getElementById('winTipo').textContent   = tipo.toUpperCase()
+  document.getElementById('winNome').textContent   = cfg.nome
+  document.getElementById('winPremio').textContent = premioValor || '—'
+  document.getElementById('winPremio').style.color = cfg.cor
+  document.getElementById('winCartela').textContent =
+    `Cartela #${cartela.codigo} · Sorteio ativo`
+
+  document.getElementById('winnerOverlay').classList.add('show')
+  spawnConfetti(tipo)
+  if (navigator.vibrate) navigator.vibrate([100,50,100,50,200])
+}
+
+function fecharWinner() {
+  document.getElementById('winnerOverlay').classList.remove('show')
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────
+function spawnConfetti(tipo) {
+  const layer = document.getElementById('confettiLayer')
+  const palettes = {
+    keno:   ['#00e676','#00c853','#69f0ae','#b9f6ca','#ffffff'],
+    kina:   ['#ffd740','#ffab00','#ffe57f','#fff8e1','#ffffff'],
+    kuadra: ['#40c4ff','#0091ea','#80d8ff','#e1f5fe','#ffffff'],
+  }
+  const colors = palettes[tipo] || palettes.keno
+
+  for(let i=0;i<80;i++){
+    setTimeout(()=>{
+      const p = document.createElement('div')
+      p.className = 'cp'
+      p.style.cssText = `
+        left:${Math.random()*100}vw;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        width:${5+Math.random()*8}px;
+        height:${7+Math.random()*10}px;
+        border-radius:${Math.random()>.5?'50%':'2px'};
+        animation-duration:${2+Math.random()*3}s;
+        animation-delay:${Math.random()*.4}s;
+      `
+      layer.appendChild(p)
+      setTimeout(()=>p.remove(),(5)*1000)
+    }, i*25)
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+// Nenhuma cartela ao carregar — jogador digita o código
+document.getElementById('cartelasContainer').innerHTML =
+  '<div style="text-align:center;color:var(--muted);padding:40px 20px;font-size:14px;">Digite o código da sua cartela acima para acompanhar ao vivo.</div>'
+</script>
+</body>
+</html>

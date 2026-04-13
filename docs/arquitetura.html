@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plataforma Bingo 2.0 — Arquitetura Técnica</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #f0c040;
+    --accent2: #40e0a0;
+    --accent3: #e040a0;
+    --accent4: #4080f0;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 40px 20px;
+  }
+
+  .page {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+    position: relative;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(240,192,64,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(240,192,64,0.12);
+    border: 1px solid rgba(240,192,64,0.3);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arch-diagram::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle at top right, rgba(64,128,240,0.06), transparent 60%);
+  }
+
+  .arch-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .arch-row:last-child { margin-bottom: 0; }
+
+  .arch-node {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .arch-node:hover { border-color: var(--accent); }
+
+  .arch-node.highlight-yellow { border-left: 3px solid var(--accent); }
+  .arch-node.highlight-green { border-left: 3px solid var(--accent2); }
+  .arch-node.highlight-pink { border-left: 3px solid var(--accent3); }
+  .arch-node.highlight-blue { border-left: 3px solid var(--accent4); }
+
+  .node-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .node-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .node-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .arch-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 20px;
+    padding: 4px 0;
+  }
+
+  /* STACK TABLE */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .stack-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(240,192,64,0.3);
+  }
+
+  .stack-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .stack-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .stack-icon.yellow { background: rgba(240,192,64,0.15); }
+  .stack-icon.green { background: rgba(64,224,160,0.15); }
+  .stack-icon.pink { background: rgba(224,64,160,0.15); }
+  .stack-icon.blue { background: rgba(64,128,240,0.15); }
+  .stack-icon.purple { background: rgba(160,64,240,0.15); }
+  .stack-icon.orange { background: rgba(240,128,40,0.15); }
+
+  .stack-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .stack-tech {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .stack-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* DB SCHEMA */
+  .schema-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .schema-header {
+    background: var(--surface2);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .schema-table-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .schema-body {
+    padding: 16px 20px;
+  }
+
+  .schema-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .field-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .field-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .field-pk {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(240,192,64,0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ROADMAP */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 700px) {
+    .roadmap { grid-template-columns: 1fr; }
+    .arch-row { flex-direction: column; }
+    .schema-fields { grid-template-columns: 1fr; }
+  }
+
+  .month-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .month-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .month-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .month-title.m1 { color: var(--accent); }
+  .month-title.m2 { color: var(--accent2); }
+  .month-title.m3 { color: var(--accent3); }
+
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-list li {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .task-list li::before {
+    content: '→';
+    color: var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* FLOW */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .flow-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 40px;
+  }
+
+  .flow-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .flow-line {
+    width: 1px;
+    flex: 1;
+    min-height: 24px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .flow-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    flex: 1;
+    margin-bottom: 4px;
+  }
+
+  .flow-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .flow-desc {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* REVENUE */
+  .revenue-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 600px) {
+    .revenue-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .rev-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .rev-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .rev-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .rev-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--border);
+  }
+
+  /* ADVANTAGE */
+  .advantage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 600px) {
+    .advantage-grid { grid-template-columns: 1fr; }
+  }
+
+  .adv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .adv-card.old { border-top: 2px solid #f04040; }
+  .adv-card.new { border-top: 2px solid var(--accent2); }
+
+  .adv-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
+  .adv-title.old { color: #f04040; }
+  .adv-title.new { color: var(--accent2); }
+
+  .adv-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .adv-list li {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+  }
+
+  .adv-list.old li::before { content: '✗'; color: #f04040; }
+  .adv-list.new li::before { content: '✓'; color: var(--accent2); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0d0d18;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+
+  .code-block .comment { color: #4a4a70; }
+  .code-block .keyword { color: var(--accent4); }
+  .code-block .string { color: var(--accent2); }
+  .code-block .type { color: var(--accent); }
+  .code-block .fn { color: var(--accent3); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  .footer-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.2s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+  .section:nth-child(6) { animation-delay: 0.3s; }
+  .section:nth-child(7) { animation-delay: 0.35s; }
+  .section:nth-child(8) { animation-delay: 0.4s; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .tag.core { background: rgba(240,192,64,0.15); color: var(--accent); }
+  .tag.api { background: rgba(64,128,240,0.15); color: var(--accent4); }
+  .tag.rt { background: rgba(64,224,160,0.15); color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header section">
+    <div class="badge">Documento Técnico · v1.0</div>
+    <h1>Plataforma<br><span>Bingo 2.0</span></h1>
+    <p class="subtitle">Arquitetura completa para replicar e superar o sistema On Line Bingo com stack moderno</p>
+  </div>
+
+  <!-- ARQUITETURA GERAL -->
+  <div class="section">
+    <div class="section-label">01 — Visão Geral</div>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-node highlight-yellow">
+          <div class="node-icon">👑</div>
+          <div class="node-title">Painel Admin Central</div>
+          <div class="node-sub">React + Supabase</div>
+        </div>
+        <div class="arch-node highlight-yellow">
+          <div class="node-icon">⚙️</div>
+          <div class="node-title">Motor de Sorteio</div>
+          <div class="node-sub">Node.js + Edge Functions</div>
+        </div>
+        <div class="arch-node highlight-yellow">
+          <div class="node-icon">🗄️</div>
+          <div class="node-title">Banco de Dados</div>
+          <div class="node-sub">Supabase (PostgreSQL)</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↕ Realtime WebSocket (Supabase Channels)</div>
+      <div class="arch-row">
+        <div class="arch-node highlight-green">
+          <div class="node-icon">📺</div>
+          <div class="node-title">Display TV</div>
+          <div class="node-sub">React PWA · fullscreen</div>
+        </div>
+        <div class="arch-node highlight-green">
+          <div class="node-icon">📱</div>
+          <div class="node-title">App Vendedor</div>
+          <div class="node-sub">Ionic/React · venda cartelas</div>
+        </div>
+        <div class="arch-node highlight-green">
+          <div class="node-icon">🎴</div>
+          <div class="node-title">Cartela Digital</div>
+          <div class="node-sub">PWA · jogador acompanha</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↕ PIX + Webhooks</div>
+      <div class="arch-row">
+        <div class="arch-node highlight-pink">
+          <div class="node-icon">💸</div>
+          <div class="node-title">Pagamentos</div>
+          <div class="node-sub">Iugu · PIX automático</div>
+        </div>
+        <div class="arch-node highlight-pink">
+          <div class="node-icon">🔔</div>
+          <div class="node-title">Notificações</div>
+          <div class="node-sub">n8n · WhatsApp/Push</div>
+        </div>
+        <div class="arch-node highlight-pink">
+          <div class="node-icon">📊</div>
+          <div class="node-title">Analytics</div>
+          <div class="node-sub">Retool · dashboards</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STACK -->
+  <div class="section">
+    <div class="section-label">02 — Stack Tecnológico</div>
+    <div class="stack-grid">
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon yellow">🗄️</div>
+          <div>
+            <div class="stack-name">Banco de Dados</div>
+            <span class="stack-tech">Supabase · PostgreSQL</span>
+          </div>
+        </div>
+        <div class="stack-desc">Realtime nativo via WebSocket. RLS para segurança por ponto. Supabase Edge Functions para lógica crítica do sorteio. Você já domina.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon green">⚡</div>
+          <div>
+            <div class="stack-name">Realtime</div>
+            <span class="stack-tech">Supabase Channels</span>
+          </div>
+        </div>
+        <div class="stack-desc">Broadcast de cada bola sorteada para todos os displays simultaneamente. Latência &lt;100ms. Sem WebSocket custom necessário.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon blue">📺</div>
+          <div>
+            <div class="stack-name">Display TV</div>
+            <span class="stack-tech">React PWA · Vite</span>
+          </div>
+        </div>
+        <div class="stack-desc">URL única por ponto. Abre em qualquer Smart TV com browser. Fullscreen automático. Sem app para instalar no bar.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon purple">📱</div>
+          <div>
+            <div class="stack-name">App Vendedor</div>
+            <span class="stack-tech">Ionic/React · seu stack</span>
+          </div>
+        </div>
+        <div class="stack-desc">O operador do bar vende cartelas, vê comissão em tempo real, confirma pagamentos PIX e acompanha o sorteio pelo celular.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon orange">⚙️</div>
+          <div>
+            <div class="stack-name">Motor de Sorteio</div>
+            <span class="stack-tech">Node.js + Cron</span>
+          </div>
+        </div>
+        <div class="stack-desc">Sorteia 1 bola a cada N segundos. Detecta Kuadra/Kina/Keno automaticamente. Seed auditável para transparência. Roda como microserviço.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon pink">💸</div>
+          <div>
+            <div class="stack-name">Pagamentos</div>
+            <span class="stack-tech">Iugu · PIX API</span>
+          </div>
+        </div>
+        <div class="stack-desc">PIX gerado automaticamente na venda da cartela. Webhook confirma pagamento e ativa cartela em tempo real. Repasse automático para pontos.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon green">🔔</div>
+          <div>
+            <div class="stack-name">Automações</div>
+            <span class="stack-tech">n8n · Z-API</span>
+          </div>
+        </div>
+        <div class="stack-desc">WhatsApp "sorteio começa em 10 min". Notifica ganhador com comprovante. Relatório diário para operadores. Você já usa n8n.</div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-header">
+          <div class="stack-icon yellow">📊</div>
+          <div>
+            <div class="stack-name">Admin / Analytics</div>
+            <span class="stack-tech">React + Retool</span>
+          </div>
+        </div>
+        <div class="stack-desc">Retool para dashboard interno rápido. React para painel white-label que você vende para operadores. Relatórios financeiros por ponto.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BANCO DE DADOS -->
+  <div class="section">
+    <div class="section-label">03 — Schema do Banco de Dados</div>
+
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-table-name">sorteios</span>
+        <span class="tag core">CORE</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-fields">
+          <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="field-pk">PK</span></div>
+          <div class="field-row"><span class="field-name">numero</span><span class="field-type">int</span></div>
+          <div class="field-row"><span class="field-name">status</span><span class="field-type">enum(agendado/ativo/finalizado)</span></div>
+          <div class="field-row"><span class="field-name">inicio_em</span><span class="field-type">timestamptz</span></div>
+          <div class="field-row"><span class="field-name">premio_kuadra</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">premio_kina</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">premio_keno</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">bolas_sorteadas</span><span class="field-type">int[]</span></div>
+          <div class="field-row"><span class="field-name">acumulado_ate_bola</span><span class="field-type">int</span></div>
+          <div class="field-row"><span class="field-name">seed_auditavel</span><span class="field-type">text</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-table-name">cartelas</span>
+        <span class="tag core">CORE</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-fields">
+          <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="field-pk">PK</span></div>
+          <div class="field-row"><span class="field-name">codigo</span><span class="field-type">int (único)</span></div>
+          <div class="field-row"><span class="field-name">sorteio_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">ponto_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">numeros</span><span class="field-type">int[15]</span></div>
+          <div class="field-row"><span class="field-name">status</span><span class="field-type">enum(disponivel/vendida/paga)</span></div>
+          <div class="field-row"><span class="field-name">comprador_nome</span><span class="field-type">text</span></div>
+          <div class="field-row"><span class="field-name">comprador_tel</span><span class="field-type">text</span></div>
+          <div class="field-row"><span class="field-name">valor_pago</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">pix_txid</span><span class="field-type">text</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-table-name">pontos</span>
+        <span class="tag api">REDE</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-fields">
+          <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="field-pk">PK</span></div>
+          <div class="field-row"><span class="field-name">nome</span><span class="field-type">text</span></div>
+          <div class="field-row"><span class="field-name">cidade</span><span class="field-type">text</span></div>
+          <div class="field-row"><span class="field-name">estado</span><span class="field-type">char(2)</span></div>
+          <div class="field-row"><span class="field-name">operador_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">comissao_pct</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">display_token</span><span class="field-type">text (único)</span></div>
+          <div class="field-row"><span class="field-name">ativo</span><span class="field-type">boolean</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-table-name">bolas</span>
+        <span class="tag rt">REALTIME</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-fields">
+          <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="field-pk">PK</span></div>
+          <div class="field-row"><span class="field-name">sorteio_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">numero</span><span class="field-type">int (1-90)</span></div>
+          <div class="field-row"><span class="field-name">sequencia</span><span class="field-type">int</span></div>
+          <div class="field-row"><span class="field-name">sorteada_em</span><span class="field-type">timestamptz</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-table-name">ganhadores</span>
+        <span class="tag core">CORE</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-fields">
+          <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="field-pk">PK</span></div>
+          <div class="field-row"><span class="field-name">sorteio_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">cartela_id</span><span class="field-type">uuid FK</span></div>
+          <div class="field-row"><span class="field-name">tipo</span><span class="field-type">enum(kuadra/kina/keno)</span></div>
+          <div class="field-row"><span class="field-name">bola_na_sequencia</span><span class="field-type">int</span></div>
+          <div class="field-row"><span class="field-name">premio_valor</span><span class="field-type">decimal</span></div>
+          <div class="field-row"><span class="field-name">pago_em</span><span class="field-type">timestamptz</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLUXO OPERACIONAL -->
+  <div class="section">
+    <div class="section-label">04 — Fluxo Operacional</div>
+    <div class="flow">
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">1</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">Operador Central cria rodada</div>
+          <div class="flow-desc">Define prêmios (Kuadra/Kina/Keno), preço da cartela, horário, pontos participantes e acumulado. Sistema gera cartelas em lote (até 240.000 por série).</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">2</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">Pontos vendem cartelas</div>
+          <div class="flow-desc">Vendedor usa app Ionic, gera QR Code PIX. Comprador paga, webhook Iugu confirma, cartela ativa automaticamente. Opção de cartela física impressa (térmica).</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">3</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">n8n dispara notificações</div>
+          <div class="flow-desc">"Sorteio começa em 15 minutos" via WhatsApp para todos os compradores do ponto. TV do bar recebe sinal de "pré-sorteio" e exibe contagem regressiva.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">4</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">Motor sorteia em tempo real</div>
+          <div class="flow-desc">Node.js sorteia 1 bola a cada 4s. Supabase Realtime faz broadcast para todos os displays simultaneamente. Algoritmo verifica todas as cartelas a cada bola.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">5</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">Ganhador detectado automaticamente</div>
+          <div class="flow-desc">Sistema identifica cartela ganhadora, exibe "GANHADOR" na TV com nome do ponto e números destacados. Push notification para o comprador. Relatório gerado.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-num">6</div>
+        </div>
+        <div class="flow-content">
+          <div class="flow-title">Repasse financeiro</div>
+          <div class="flow-desc">Iugu split automático: prêmio para ganhador via PIX, comissão para ponto, receita para operador. Relatório diário via n8n para cada parceiro.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MOTOR DE SORTEIO (código) -->
+  <div class="section">
+    <div class="section-label">05 — Motor de Sorteio (Lógica Principal)</div>
+    <div class="code-block">
+<span class="comment">// motor-sorteio.js — Node.js microservice</span>
+
+<span class="keyword">async function</span> <span class="fn">iniciarSorteio</span>(sorteioId) {
+  <span class="keyword">const</span> bolas = <span class="fn">embaralhar</span>([...<span class="fn">Array</span>(90).<span class="fn">keys</span>()].<span class="fn">map</span>(n => n + 1))
+  <span class="keyword">const</span> cartelas = <span class="keyword">await</span> supabase
+    .<span class="fn">from</span>(<span class="string">'cartelas'</span>)
+    .<span class="fn">select</span>(<span class="string">'id, numeros'</span>)
+    .<span class="fn">eq</span>(<span class="string">'sorteio_id'</span>, sorteioId)
+    .<span class="fn">eq</span>(<span class="string">'status'</span>, <span class="string">'paga'</span>)
+
+  <span class="keyword">let</span> sorteadas = []
+
+  <span class="keyword">for</span> (<span class="keyword">const</span> bola <span class="keyword">of</span> bolas) {
+    sorteadas.<span class="fn">push</span>(bola)
+
+    <span class="comment">// Persiste e faz broadcast em tempo real</span>
+    <span class="keyword">await</span> supabase.<span class="fn">from</span>(<span class="string">'bolas'</span>).<span class="fn">insert</span>({ sorteio_id, numero: bola, sequencia: sorteadas.length })
+
+    <span class="comment">// Verifica ganhadores</span>
+    <span class="keyword">const</span> ganhadores = <span class="fn">verificarCartelas</span>(cartelas.data, sorteadas)
+    <span class="keyword">if</span> (ganhadores.keno) {
+      <span class="keyword">await</span> <span class="fn">registrarGanhador</span>(ganhadores.keno, <span class="string">'keno'</span>)
+      <span class="keyword">break</span> <span class="comment">// Encerra sorteio</span>
+    }
+
+    <span class="keyword">await</span> <span class="fn">sleep</span>(4000) <span class="comment">// 4 segundos entre bolas</span>
+  }
+}
+
+<span class="keyword">function</span> <span class="fn">verificarCartelas</span>(cartelas, sorteadas) {
+  <span class="keyword">const</span> set = <span class="keyword">new</span> <span class="type">Set</span>(sorteadas)
+  <span class="keyword">for</span> (<span class="keyword">const</span> cartela <span class="keyword">of</span> cartelas) {
+    <span class="keyword">const</span> acertos = cartela.numeros.<span class="fn">filter</span>(n => set.<span class="fn">has</span>(n))
+    <span class="keyword">if</span> (acertos.length === 15) <span class="keyword">return</span> { keno: cartela }
+    <span class="keyword">if</span> (acertos.length >= 5) <span class="comment">/* verifica linhas para Kina/Kuadra */</span>
+  }
+}
+    </div>
+  </div>
+
+  <!-- VANTAGENS COMPETITIVAS -->
+  <div class="section">
+    <div class="section-label">06 — Vantagens sobre o Sistema Atual</div>
+    <div class="advantage-grid">
+      <div class="adv-card old">
+        <div class="adv-title old">❌ Sistema Legado (On Line Bingo)</div>
+        <ul class="adv-list old">
+          <li>Interface dos anos 2000, sem responsividade</li>
+          <li>Cartelas apenas físicas (papel impresso)</li>
+          <li>Sem PIX integrado — dinheiro no bar</li>
+          <li>Sem app para o jogador acompanhar</li>
+          <li>Sem notificações WhatsApp automáticas</li>
+          <li>Sem analytics para o operador</li>
+          <li>Código fechado, sem API</li>
+          <li>Servidor europeu com latência maior</li>
+        </ul>
+      </div>
+      <div class="adv-card new">
+        <div class="adv-title new">✅ Bingo 2.0 (seu sistema)</div>
+        <ul class="adv-list new">
+          <li>UI moderna, animada, profissional</li>
+          <li>Cartela digital no celular do jogador</li>
+          <li>PIX automático integrado (Iugu)</li>
+          <li>Jogador acompanha pelo smartphone</li>
+          <li>WhatsApp automático via n8n + Z-API</li>
+          <li>Dashboard em tempo real por ponto</li>
+          <li>API aberta para integrações</li>
+          <li>Servidor brasileiro, latência mínima</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO FINANCEIRO -->
+  <div class="section">
+    <div class="section-label">07 — Modelo Financeiro</div>
+
+    <div class="revenue-grid">
+      <div class="rev-card">
+        <div class="rev-pct" style="color: var(--accent)">60%</div>
+        <div class="rev-label">Pool de Prêmios</div>
+        <div class="rev-desc">Kuadra + Kina + Keno</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-pct" style="color: var(--accent2)">20%</div>
+        <div class="rev-label">Ponto Vendedor</div>
+        <div class="rev-desc">Comissão do bar</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-pct" style="color: var(--accent3)">15%</div>
+        <div class="rev-label">Operador (Você)</div>
+        <div class="rev-desc">Receita da plataforma</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-pct" style="color: var(--accent4)">5%</div>
+        <div class="rev-label">Acumulado</div>
+        <div class="rev-desc">Reserva / jackpot</div>
+      </div>
+    </div>
+
+    <div class="arch-diagram">
+      <div style="font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--accent2)">Projeção Conservadora</div>
+      <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;">
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px;">FASE 1 · 10 pontos</div>
+          <div style="font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text)">R$900<span style="font-size:14px; color: var(--muted)">/dia</span></div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">300 cartelas × R$2 × 15% × 10pts</div>
+        </div>
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px;">FASE 2 · 50 pontos</div>
+          <div style="font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent)">R$4.500<span style="font-size:14px; color: var(--muted)">/dia</span></div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">= R$135k/mês</div>
+        </div>
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px;">FASE 3 · 200 pontos</div>
+          <div style="font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent2)">R$18k<span style="font-size:14px; color: var(--muted)">/dia</span></div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">= R$540k/mês</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="section">
+    <div class="section-label">08 — Roadmap 3 Meses</div>
+    <div class="roadmap">
+
+      <div class="month-card">
+        <div class="month-label">Mês 01</div>
+        <div class="month-title m1">Core Engine</div>
+        <ul class="task-list">
+          <li>Schema Supabase completo</li>
+          <li>Motor de sorteio Node.js</li>
+          <li>Realtime broadcast</li>
+          <li>Display TV básico (React PWA)</li>
+          <li>Painel admin mínimo</li>
+          <li>Gerador de cartelas em lote</li>
+          <li>Algoritmo Kuadra/Kina/Keno</li>
+        </ul>
+      </div>
+
+      <div class="month-card">
+        <div class="month-label">Mês 02</div>
+        <div class="month-title m2">Rede & Pagamentos</div>
+        <ul class="task-list">
+          <li>Cadastro de pontos vendedores</li>
+          <li>App vendedor (Ionic)</li>
+          <li>PIX via Iugu + webhooks</li>
+          <li>Cartela digital no celular</li>
+          <li>WhatsApp automático (n8n)</li>
+          <li>Display TV com animações</li>
+          <li>Onboarding 3-5 pontos piloto</li>
+        </ul>
+      </div>
+
+      <div class="month-card">
+        <div class="month-label">Mês 03</div>
+        <div class="month-title m3">Produto & Escala</div>
+        <ul class="task-list">
+          <li>Super Rodada / Acumulado</li>
+          <li>Relatórios financeiros</li>
+          <li>Dashboard analytics (Retool)</li>
+          <li>Impressora térmica integrada</li>
+          <li>White-label por operador</li>
+          <li>API para licenciamento</li>
+          <li>Expand para 20+ pontos</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-text">BINGO 2.0 · ARQUITETURA TÉCNICA v1.0 · SOVEREIGN DIGITAL GROUP LLC</div>
+  </div>
+
+</div>
+</body>
+</html>
