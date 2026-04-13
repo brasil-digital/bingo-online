@@ -1012,8 +1012,8 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
         <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
           <button class="btn btn-ghost">Salvar Rascunho</button>
-          <button class="btn btn-warning">📋 Gerar Cartelas</button>
-          <button class="btn btn-success" onclick="alert('✅ Sorteio #2475 agendado para 21:00!')">✅ Agendar Sorteio</button>
+          <button class="btn btn-warning" onclick="gerarCartelas()">📋 Gerar Cartelas</button>
+          <button class="btn btn-success" onclick="criarEIniciarSorteio()">🎱 Criar e Iniciar Agora</button>
         </div>
       </div>
     </div>
@@ -1504,6 +1504,86 @@ async function buildPontosTable() {
 
 function abrirVendedor(pontoId) {
   window.open(`app-vendedor.html?ponto=${pontoId}`, '_blank')
+}
+
+// ── CRIAR E INICIAR SORTEIO DE UMA VEZ ───────────────────
+async function criarEIniciarSorteio() {
+  const btn = event.currentTarget
+  btn.disabled = true
+  btn.textContent = '⏳ Criando...'
+
+  // 1. Cria o sorteio no banco
+  const cartelas = parseInt(document.getElementById('cfg-cartelas')?.value) || 1000
+  const preco    = parseFloat(document.getElementById('cfg-preco')?.value)  || 2
+  const pKuadra  = parseInt(document.getElementById('sl-kuadra')?.value)    || 10
+  const pKina    = parseInt(document.getElementById('sl-kina')?.value)      || 20
+  const pKeno    = parseInt(document.getElementById('sl-keno')?.value)      || 30
+  const pPonto   = parseInt(document.getElementById('sl-ponto')?.value)     || 20
+
+  const { data: sorteio, error } = await sb.from('sorteios').insert({
+    status:             'agendado',
+    inicio_em:          new Date().toISOString(),
+    preco_cartela:      preco,
+    total_cartelas:     cartelas,
+    pct_kuadra:         pKuadra,
+    pct_kina:           pKina,
+    pct_keno:           pKeno,
+    pct_ponto:          pPonto,
+    acumulado_ate_bola: 35,
+    arrecadacao_total:  0
+  }).select('id, numero').single()
+
+  if (error) {
+    alert('Erro ao criar sorteio: ' + error.message)
+    btn.disabled = false
+    btn.textContent = '🎱 Criar e Iniciar Agora'
+    return
+  }
+
+  btn.textContent = '⏳ Iniciando...'
+
+  // 2. Chama o engine para iniciar
+  try {
+    const res = await fetch(`${ENGINE_URL}/iniciar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ENGINE_KEY}`
+      },
+      body: JSON.stringify({ sorteioId: sorteio.id })
+    })
+    const json = await res.json()
+
+    if (json.ok) {
+      alert(`✅ Sorteio #${sorteio.numero} iniciado!\nAs bolas já estão sendo sorteadas.`)
+      await carregarDashboard()
+    } else {
+      alert('Sorteio criado mas engine retornou erro. Verifique os logs.')
+    }
+  } catch(e) {
+    alert('Sorteio criado no banco mas não foi possível chamar o engine:\n' + e.message)
+  }
+
+  btn.disabled = false
+  btn.textContent = '🎱 Criar e Iniciar Agora'
+}
+
+// ── GERAR CARTELAS ────────────────────────────────────────
+async function gerarCartelas() {
+  if (!sorteioAtivo) { alert('Nenhum sorteio ativo. Crie um sorteio primeiro.'); return }
+
+  const qtde = parseInt(prompt('Quantas cartelas gerar?', '100')) || 100
+  const pontoId = prompt('ID do ponto (deixe em branco para sem ponto):', '') || null
+
+  const { data, error } = await sb.rpc('gerar_cartelas', {
+    p_sorteio_id: sorteioAtivo.id,
+    p_ponto_id:   pontoId,
+    p_quantidade: qtde
+  })
+
+  if (error) { alert('Erro: ' + error.message); return }
+  alert(`✅ ${data} cartelas geradas com sucesso!`)
+  await carregarDashboard()
 }
 
 // ── INIT ──────────────────────────────────────────────────
