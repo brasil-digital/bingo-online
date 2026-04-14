@@ -1373,6 +1373,8 @@ function assinarMudancaSorteio() {
         await carregarSorteio()
         await carregarPontos()
         await carregarCartelas()
+        await carregarBolasExistentes()
+        await carregarGanhadores()
         assinarBolas()
         assinarGanhadores()
       }
