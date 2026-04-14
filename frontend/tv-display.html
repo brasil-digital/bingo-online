@@ -712,6 +712,250 @@ html, body {
   text-shadow: 0 0 30px rgba(0,232,122,0.5);
 }
 
+/* ─── AVATAR APRESENTADORA ──────────────────────────── */
+.avatar-wrap {
+  position: fixed;
+  bottom: 88px;
+  left: calc(50% - 230px);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  gap: 6px;
+}
+.avatar-char {
+  position: relative;
+  width: 110px;
+  height: 195px;
+  animation: avIdle 2.4s ease-in-out infinite;
+}
+/* Balão de fala */
+.avatar-speech {
+  background: #fff;
+  color: #0b1a35;
+  border-radius: 14px;
+  padding: 5px 16px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(6px) scale(0.85);
+  transition: opacity 0.25s, transform 0.25s;
+  position: relative;
+  text-align: center;
+  min-width: 60px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.avatar-speech::after {
+  content:'';
+  position:absolute;
+  bottom:-9px;
+  left:50%;
+  transform:translateX(-50%);
+  border:9px solid transparent;
+  border-top-color:#fff;
+  border-bottom:0;
+}
+.avatar-speech.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+/* Cabelo atrás */
+.av-hair-back {
+  position:absolute;
+  top:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:68px;
+  height:115px;
+  background:#1a0800;
+  border-radius:34px 34px 18px 18px;
+  z-index:1;
+}
+/* Cabeça */
+.av-head {
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:60px;
+  height:64px;
+  background:#f5c5a3;
+  border-radius:50% 50% 44% 44%;
+  z-index:3;
+}
+/* Olhos */
+.av-eye {
+  position:absolute;
+  top:26px;
+  width:9px;
+  height:11px;
+  background:#150800;
+  border-radius:50%;
+}
+.av-eye-l { left:13px; }
+.av-eye-r { right:13px; }
+.av-eye::after {
+  content:'';
+  position:absolute;
+  top:1px; left:2px;
+  width:3px; height:3px;
+  background:#fff;
+  border-radius:50%;
+}
+/* Cílios */
+.av-eye::before {
+  content:'';
+  position:absolute;
+  top:-4px; left:0;
+  width:9px; height:4px;
+  border-top:3px solid #150800;
+  border-radius:50% 50% 0 0;
+}
+/* Bochechas */
+.av-blush {
+  position:absolute;
+  top:38px;
+  width:13px; height:7px;
+  background:rgba(255,100,100,0.28);
+  border-radius:50%;
+}
+.av-blush-l { left:7px; }
+.av-blush-r { right:7px; }
+/* Boca */
+.av-mouth {
+  position:absolute;
+  bottom:13px;
+  left:50%;
+  transform:translateX(-50%);
+  width:18px; height:5px;
+  border-bottom:3px solid #c06050;
+  border-radius:0 0 10px 10px;
+}
+.av-mouth.talking {
+  animation: avTalk 0.14s ease-in-out infinite;
+}
+/* Cabelo frente (franja) */
+.av-hair-front {
+  position:absolute;
+  top:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:68px; height:26px;
+  background:#1a0800;
+  border-radius:34px 34px 0 0;
+  z-index:4;
+}
+/* Corpo / vestido */
+.av-body {
+  position:absolute;
+  top:70px;
+  left:50%;
+  transform:translateX(-50%);
+  width:66px; height:92px;
+  background:linear-gradient(160deg,#7c3aed,#4338ca);
+  border-radius:8px 8px 22px 22px;
+  z-index:2;
+}
+/* Pescoço */
+.av-body::before {
+  content:'';
+  position:absolute;
+  top:-14px; left:50%;
+  transform:translateX(-50%);
+  width:20px; height:18px;
+  background:#f5c5a3;
+  border-radius:4px;
+}
+/* Detalhe decote */
+.av-body::after {
+  content:'';
+  position:absolute;
+  top:0; left:50%;
+  transform:translateX(-50%);
+  width:20px; height:14px;
+  border-bottom:2px solid rgba(255,255,255,0.15);
+  border-radius:0 0 10px 10px;
+}
+/* Braço esquerdo (estático) */
+.av-arm-l {
+  position:absolute;
+  top:76px; left:14px;
+  width:16px; height:52px;
+  background:#7c3aed;
+  border-radius:8px;
+  transform-origin:top center;
+  transform:rotate(18deg);
+  z-index:1;
+}
+.av-arm-l::after {
+  content:'';
+  position:absolute;
+  bottom:-9px; left:50%;
+  transform:translateX(-50%);
+  width:15px; height:15px;
+  background:#f5c5a3;
+  border-radius:50%;
+}
+/* Braço direito — pivô no ombro */
+.av-arm-wrap-r {
+  position:absolute;
+  top:70px; right:10px;
+  width:18px; height:85px;
+  transform-origin:top center;
+  transform:rotate(-18deg);
+  transition:transform 0.55s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:5;
+}
+.av-arm-wrap-r.raised {
+  transform:rotate(-155deg);
+}
+.av-arm-r {
+  width:16px; height:52px;
+  background:#7c3aed;
+  border-radius:8px;
+  position:relative;
+}
+.av-arm-r::after {
+  content:'';
+  position:absolute;
+  bottom:-9px; left:50%;
+  transform:translateX(-50%);
+  width:15px; height:15px;
+  background:#f5c5a3;
+  border-radius:50%;
+}
+/* Bola na mão */
+.av-bola-hand {
+  position:absolute;
+  bottom:-38px; left:50%;
+  transform:translateX(-50%);
+  width:34px; height:34px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffb840,#e07010 40%,#7a3a00 80%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:900;
+  color:#fff;
+  opacity:0;
+  transition:opacity 0.3s;
+  box-shadow:0 0 14px rgba(255,184,64,0.7);
+}
+.av-arm-wrap-r.raised .av-bola-hand {
+  opacity:1;
+}
+@keyframes avIdle {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-5px); }
+}
+@keyframes avTalk {
+  0%,100% { height:4px; border-radius:0 0 6px 6px; }
+  50%     { height:13px; border-radius:0 0 10px 10px; }
+}
+
 /* CONFETTI */
 .confetti-wrap {
   position: fixed;
@@ -854,6 +1098,32 @@ html, body {
 </div>
 
 <!-- PAINEL DE GANHADORES PERMANENTE -->
+<!-- AVATAR APRESENTADORA -->
+<div class="avatar-wrap" id="avatarWrap">
+  <div class="avatar-speech" id="avatarSpeech">—</div>
+  <div class="avatar-char">
+    <div class="av-hair-back"></div>
+    <div class="av-head">
+      <div class="av-eye av-eye-l"></div>
+      <div class="av-eye av-eye-r"></div>
+      <div class="av-blush av-blush-l"></div>
+      <div class="av-blush av-blush-r"></div>
+      <div class="av-mouth" id="avMouth"></div>
+    </div>
+    <div class="av-hair-front"></div>
+    <div class="av-body">
+      <div class="av-arm-l"></div>
+      <div class="av-arm-wrap-r" id="avArmWrapR">
+        <div class="av-arm-r">
+          <div class="av-bola-hand" id="avBolaHand">
+            <span id="avBolaNum">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="painelGanhadores" style="
   position:fixed; top:80px; right:16px; z-index:50;
   display:flex; flex-direction:column; gap:8px;
@@ -1410,6 +1680,9 @@ function processarBola(bola, animar = true) {
 
   // Narração da bola
   if (animar && window._audioAtivo) narrarBola(bola)
+
+  // Avatar apresentadora
+  if (animar) animarAvatar(bola)
 }
 
 function buildGrade() {
@@ -1544,6 +1817,46 @@ function adicionarCardGanhador(g) {
     <div style="font-size:18px;font-weight:800;color:${cor};margin-top:4px;">${g.premio}</div>
   `
   document.getElementById('painelGanhadores').appendChild(card)
+}
+
+// ─── AVATAR ───────────────────────────────────────────
+function animarAvatar(bola) {
+  const arm     = document.getElementById('avArmWrapR')
+  const bolaEl  = document.getElementById('avBolaNum')
+  const bolaDiv = document.getElementById('avBolaHand')
+  const speech  = document.getElementById('avatarSpeech')
+  const mouth   = document.getElementById('avMouth')
+
+  // Cor da bola (igual à bola grande)
+  const colors = [
+    'radial-gradient(circle at 35% 30%,#ffb840,#e07010 40%,#7a3a00 80%)',
+    'radial-gradient(circle at 35% 30%,#5ec8ff,#1478d4 40%,#0a3a7a 80%)',
+    'radial-gradient(circle at 35% 30%,#a0e060,#40a020 40%,#1a5000 80%)',
+    'radial-gradient(circle at 35% 30%,#ff7090,#d02050 40%,#6a0020 80%)',
+    'radial-gradient(circle at 35% 30%,#c080ff,#6020d0 40%,#2a0060 80%)',
+  ]
+  const ci = Math.floor((bola - 1) / 18)
+  bolaDiv.style.background = colors[ci % colors.length]
+  bolaEl.textContent = bola
+
+  // Levanta o braço
+  arm.classList.add('raised')
+
+  // Mostra balão + boca falando após 0.4s (braço já subiu)
+  setTimeout(() => {
+    speech.textContent = bola
+    speech.classList.add('show')
+    mouth.classList.add('talking')
+  }, 420)
+
+  // Para de falar
+  setTimeout(() => mouth.classList.remove('talking'), 2400)
+
+  // Abaixa braço e esconde balão
+  setTimeout(() => {
+    arm.classList.remove('raised')
+    speech.classList.remove('show')
+  }, 3600)
 }
 
 function spawnConfetti() {
