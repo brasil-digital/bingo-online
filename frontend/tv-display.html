@@ -1265,6 +1265,8 @@ let SORTEIO_ID = null
 let sorteadas        = []
 let acumBola         = 35
 let cartelasDB       = []
+let bolaChannel      = null
+let ganhadorChannel  = null
 let proximoCountdown = 180
 
 // REMOVIDO — dados simulados substituídos pelo banco
@@ -1547,7 +1549,8 @@ async function carregarGanhadores() {
 
 // ─── REALTIME: BOLAS ──────────────────────────────────
 function assinarBolas() {
-  sb.channel('bolas-realtime')
+  if (bolaChannel) sb.removeChannel(bolaChannel)
+  bolaChannel = sb.channel('bolas-' + SORTEIO_ID)
     .on('postgres_changes', {
       event:  'INSERT',
       schema: 'public',
@@ -1557,6 +1560,7 @@ function assinarBolas() {
       processarBola(payload.new.numero, true)
     })
     .subscribe(status => {
+      console.log('[TV] Bolas channel status:', status)
       if (status === 'SUBSCRIBED') {
         document.getElementById('statusText').textContent = 'AO VIVO'
       }
@@ -1565,14 +1569,13 @@ function assinarBolas() {
 
 // ─── REALTIME: GANHADORES ─────────────────────────────
 function assinarGanhadores() {
-  // Sem filtro no servidor (mais confiável) — filtramos no cliente
-  sb.channel('ganhadores-tv-' + SORTEIO_ID)
+  if (ganhadorChannel) sb.removeChannel(ganhadorChannel)
+  ganhadorChannel = sb.channel('ganhadores-tv-' + SORTEIO_ID)
     .on('postgres_changes', {
       event:  'INSERT',
       schema: 'public',
       table:  'ganhadores'
     }, async payload => {
-      // Ignora ganhadores de outros sorteios
       if (payload.new.sorteio_id !== SORTEIO_ID) return
 
       console.log('[TV] Ganhador recebido via Realtime:', payload.new)
