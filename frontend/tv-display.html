@@ -1452,12 +1452,13 @@ async function carregarPontos() {
 // ─── CARREGAR CARTELAS ────────────────────────────────
 async function carregarCartelas() {
   // Carrega TODAS as cartelas pagas para rastrear hits
-  const { data } = await sb
+  const { data, error } = await sb
     .from('cartelas')
     .select('id, codigo, numeros, ponto_id, pontos(nome)')
     .eq('sorteio_id', SORTEIO_ID)
     .eq('status', 'paga')
 
+  console.log('[TV] carregarCartelas:', data?.length, 'cartelas | SORTEIO_ID:', SORTEIO_ID, '| erro:', error?.message)
   if (!data || data.length === 0) return
   // Normaliza numeros para garantir que são inteiros
   cartelasDB = data.map(c => ({
