@@ -1352,6 +1352,7 @@ async function detectarSorteioAtivo() {
   await carregarGanhadores()
   assinarBolas()
   assinarGanhadores()
+  iniciarPollingGanhadores()
 
   // Anuncia início do sorteio
   if (window._audioAtivo) {
@@ -1583,28 +1584,51 @@ function assinarGanhadores() {
       table:  'ganhadores'
     }, async payload => {
       if (payload.new.sorteio_id !== SORTEIO_ID) return
-
       console.log('[TV] Ganhador recebido via Realtime:', payload.new)
-
-      const { data: cartela } = await sb
-        .from('cartelas')
-        .select('codigo, pontos(nome)')
-        .eq('id', payload.new.cartela_id)
-        .single()
-
-      const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-      mostrarGanhador({
-        tipo:    payload.new.tipo,
-        ponto:   cartela?.pontos?.nome || '—',
-        cartela: `#${cartela?.codigo || '—'}`,
-        premio:  fmt(payload.new.premio_valor)
-      })
-
-      await carregarGanhadores()
+      await exibirGanhador(payload.new)
     })
     .subscribe(status => {
       console.log('[TV] Ganhadores channel status:', status)
     })
+}
+
+// ─── POLLING GANHADORES (fallback se Realtime falhar) ─
+let _ganhadorIds = new Set()
+let _pollingInterval = null
+
+function iniciarPollingGanhadores() {
+  if (_pollingInterval) clearInterval(_pollingInterval)
+  _pollingInterval = setInterval(async () => {
+    if (!SORTEIO_ID) return
+    const { data } = await sb
+      .from('ganhadores')
+      .select('id, tipo, premio_valor, sorteio_id, cartela_id')
+      .eq('sorteio_id', SORTEIO_ID)
+    if (!data) return
+    for (const g of data) {
+      if (!_ganhadorIds.has(g.id)) {
+        _ganhadorIds.add(g.id)
+        console.log('[TV] Ganhador detectado via polling:', g)
+        await exibirGanhador(g)
+      }
+    }
+  }, 5000)
+}
+
+async function exibirGanhador(g) {
+  const { data: cartela } = await sb
+    .from('cartelas')
+    .select('codigo, pontos(nome)')
+    .eq('id', g.cartela_id)
+    .single()
+  const fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+  mostrarGanhador({
+    tipo:    g.tipo,
+    ponto:   cartela?.pontos?.nome || '—',
+    cartela: `#${cartela?.codigo || '—'}`,
+    premio:  fmt(g.premio_valor)
+  })
+  await carregarGanhadores()
 }
 
 // ─── PROCESSAR BOLA ───────────────────────────────────
