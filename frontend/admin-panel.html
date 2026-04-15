@@ -525,7 +525,30 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 </head>
 <body>
 
-<div class="layout">
+<!-- TELA DE LOGIN -->
+<div id="loginScreen" style="
+  position:fixed;inset:0;background:#0c0e14;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+">
+  <div style="
+    background:#131620;border:1px solid #2a3050;border-radius:16px;
+    padding:48px 40px;width:340px;text-align:center;
+  ">
+    <div style="font-size:28px;font-weight:800;color:#e2e8f8;letter-spacing:2px;margin-bottom:6px;">BINGO ADMIN</div>
+    <div style="font-size:13px;color:#6070a0;margin-bottom:32px;">Acesso restrito</div>
+    <input id="senhaInput" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')verificarSenha()" style="
+      width:100%;padding:12px 16px;background:#1a1e2e;border:1px solid #2a3050;
+      border-radius:8px;color:#e2e8f8;font-size:16px;outline:none;margin-bottom:12px;
+    ">
+    <button onclick="verificarSenha()" style="
+      width:100%;padding:12px;background:#4f9eff;border:none;border-radius:8px;
+      color:#fff;font-size:15px;font-weight:700;cursor:pointer;
+    ">Entrar</button>
+    <div id="loginErro" style="color:#ff4d6d;font-size:13px;margin-top:12px;display:none;">Senha incorreta</div>
+  </div>
+</div>
+
+<div class="layout" id="mainLayout" style="display:none;">
 
 <!-- SIDEBAR -->
 <div class="sidebar">
@@ -1288,6 +1311,31 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+// ── LOGIN ─────────────────────────────────────────────────
+const ADMIN_SENHA = 'cabana2026'
+
+function verificarSenha() {
+  const val = document.getElementById('senhaInput').value
+  if (val === ADMIN_SENHA) {
+    document.getElementById('loginScreen').style.display = 'none'
+    document.getElementById('mainLayout').style.display = 'flex'
+    sessionStorage.setItem('adminOk', '1')
+    carregarDashboard()
+  } else {
+    document.getElementById('loginErro').style.display = 'block'
+    document.getElementById('senhaInput').value = ''
+    document.getElementById('senhaInput').focus()
+  }
+}
+
+// Se já autenticou nesta sessão, pula o login
+if (sessionStorage.getItem('adminOk') === '1') {
+  document.getElementById('loginScreen').style.display = 'none'
+  document.getElementById('mainLayout').style.display = 'flex'
+}
+</script>
+
+<script>
 // ── CONFIG ────────────────────────────────────────────────
 const SUPABASE_URL  = 'https://imvfraakhmtjfdclqfar.supabase.co'
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdmZyYWFraG10amZkY2xxZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODE5NzMsImV4cCI6MjA5MTY1Nzk3M30.OmZ2urzWq9p7W6q5n2im6TfrOdGMWHAII3PTWQx4Q44'
@@ -1587,7 +1635,10 @@ async function gerarCartelas() {
 }
 
 // ── INIT ──────────────────────────────────────────────────
-carregarDashboard()
+// carregarDashboard() é chamado após login bem-sucedido
+if (sessionStorage.getItem('adminOk') === '1') {
+  carregarDashboard()
+}
 buildPontosTable()
 recalcular()
 </script>
