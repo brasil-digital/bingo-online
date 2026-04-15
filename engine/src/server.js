@@ -38,7 +38,7 @@ function json(res, status, data) {
 function autenticar(req) {
   const auth = req.headers['authorization'] || ''
   const token = auth.replace('Bearer ', '')
-  return token === process.env.SUPABASE_SERVICE_KEY
+  return token === process.env.ADMIN_SECRET
 }
 
 // ── SERVIDOR ─────────────────────────────────────────────────
