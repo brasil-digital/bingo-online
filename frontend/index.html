@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brazuca Bets — Bingo Online</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #0c0e14;
+  --surface: #131620;
+  --surface2: #1a1e2e;
+  --border: #2a3050;
+  --accent: #4f9eff;
+  --accent2: #00d68f;
+  --accent3: #ffb340;
+  --accent4: #ff4d6d;
+  --purple: #a855f7;
+  --text: #e2e8f8;
+  --muted: #6070a0;
+  --radius: 12px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.logo span { color: var(--accent); }
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  background: var(--surface2);
+  transform: translateY(-2px);
+}
+
+.card .icon {
+  font-size: 2.2rem;
+}
+
+.card .label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.card .desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.card.admin { border-color: rgba(79,158,255,0.3); }
+.card.admin:hover { border-color: var(--accent); }
+.card.admin .icon-wrap { color: var(--accent); }
+
+.card.tv { border-color: rgba(168,85,247,0.3); }
+.card.tv:hover { border-color: var(--purple); }
+
+.card.vendedor { border-color: rgba(0,214,143,0.3); }
+.card.vendedor:hover { border-color: var(--accent2); }
+
+.card.jogador { border-color: rgba(255,179,64,0.3); }
+.card.jogador:hover { border-color: var(--accent3); }
+
+.footer {
+  margin-top: 40px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+</style>
+</head>
+<body>
+
+<div class="logo">Brazuca<span>Bets</span></div>
+<div class="subtitle">Plataforma de Bingo Online ao Vivo</div>
+
+<div class="grid">
+  <a class="card admin" href="admin-panel.html">
+    <div class="icon">⚙️</div>
+    <div class="label">Painel Admin</div>
+    <div class="desc">Controle sorteios, financeiro e pontos</div>
+  </a>
+
+  <a class="card tv" href="tv-display.html">
+    <div class="icon">📺</div>
+    <div class="label">Telão TV</div>
+    <div class="desc">Display para o telão do bar</div>
+  </a>
+
+  <a class="card vendedor" href="app-vendedor.html">
+    <div class="icon">🏪</div>
+    <div class="label">App Vendedor</div>
+    <div class="desc">Venda cartelas e gerencie comissões</div>
+  </a>
+
+  <a class="card jogador" href="cartela-jogador.html">
+    <div class="icon">🎱</div>
+    <div class="label">Minha Cartela</div>
+    <div class="desc">Acompanhe o sorteio ao vivo</div>
+  </a>
+</div>
+
+<div class="footer">brazucabets.games</div>
+
+</body>
+</html>
